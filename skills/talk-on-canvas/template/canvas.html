@@ -69,10 +69,22 @@
     padding: 18px 28px 12px; flex-wrap: wrap;
   }
   .eyebrow {
-    margin: 0 0 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--ink-faint); font-weight: 650;
-    display: flex; align-items: center; gap: 7px;
+    margin: 0 0 8px; font-size: 11.5px; letter-spacing: .01em;
+    color: var(--ink-faint); font-weight: 600;
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
   }
+  .eyebrow .brand-sep { color: var(--line); margin: 0 1px; }
+  .eyebrow .brand-name { color: var(--ink-dim); font-family: var(--mono); font-weight: 500; }
+  .eyebrow .brand-gh {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 600; line-height: 1; letter-spacing: 0;
+    padding: 3px 7px 3px 6px; border: 1px solid var(--line); border-radius: 999px;
+    color: var(--ink-dim); text-decoration: none;
+  }
+  .eyebrow .brand-gh:hover { color: var(--ink); border-color: var(--ink-faint); }
+  .eyebrow .brand-gh svg { width: 11px; height: 11px; fill: currentColor; }
+  .eyebrow .mode-tag { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+  .eyebrow .mode-tag:empty { display: none; }
   .eyebrow .dot {
     width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--ok) 22%, transparent);
@@ -111,13 +123,27 @@
   .pane { display: none; height: 100%; min-height: 0; }
   .pane.is-active { display: block; }
   .pane[data-pane="body"].is-active { display: grid; grid-template-columns: 272px minmax(0, 1fr); }
+  body.toc-collapsed .pane[data-pane="body"].is-active { grid-template-columns: 44px minmax(0, 1fr); }
   .pane-scroll { height: 100%; overflow-y: auto; }
   .pane-empty { color: var(--ink-faint); font-size: 14px; }
   .pane-empty[hidden] { display: none; }
 
   /* 본문 탭 좌측 목차 */
   .rail { border-right: 1px solid var(--line); background: var(--bg-sink); overflow-y: auto; min-height: 0; }
-  nav#toc { padding: 18px 12px 28px; }
+  .rail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 12px 0 20px; }
+  .rail-title { font-size: 11px; font-weight: 650; letter-spacing: .06em; color: var(--ink-faint); }
+  #btn-toc {
+    font: inherit; font-size: 13px; line-height: 1; cursor: pointer;
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--ink-faint);
+    border: 1px solid var(--line); border-radius: 7px;
+  }
+  #btn-toc:hover { color: var(--ink); border-color: var(--ink-faint); background: var(--bg-raise); }
+  body.toc-collapsed .rail { overflow: hidden; }
+  body.toc-collapsed .rail-head { padding: 14px 0 0; justify-content: center; }
+  body.toc-collapsed .rail-title, body.toc-collapsed nav#toc { display: none; }
+  /* 목차도 본문처럼 최신이 맨 위 — 링크는 생성 순으로 만들고(번호·스크롤 스파이 기준) 화면에서만 뒤집는다 */
+  nav#toc { padding: 10px 12px 28px; display: flex; flex-direction: column-reverse; justify-content: flex-end; }
   nav#toc a {
     display: flex; gap: 8px; align-items: baseline;
     padding: 6px 8px; border-radius: 7px;
@@ -135,6 +161,8 @@
   /* ---------- main ---------- */
   main { overflow-y: auto; min-height: 0; scroll-behavior: smooth; }
   .wrap { max-width: 860px; margin: 0 auto; padding: 30px 40px 120px; }
+  /* 본문 카드는 최신이 맨 위 — 문서 순서(=목차 번호)는 생성 순 그대로 두고 화면에서만 뒤집는다 */
+  #content { display: flex; flex-direction: column-reverse; }
 
   /* ---------- status board ---------- */
   .status { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -284,6 +312,9 @@
   @media (max-width: 860px) {
     .pane[data-pane="body"].is-active { grid-template-columns: 1fr; }
     .rail { border-right: none; border-bottom: 1px solid var(--line); max-height: 180px; }
+    body.toc-collapsed .pane[data-pane="body"].is-active { grid-template-columns: 1fr; }
+    body.toc-collapsed .rail-head { padding: 8px 16px; justify-content: space-between; }
+    body.toc-collapsed .rail-title { display: block; }
     .topbar-row { padding: 14px 16px 10px; }
     .tabs { padding: 0 10px; overflow-x: auto; }
     .tabs .tab { padding: 9px 10px 10px; white-space: nowrap; }
@@ -300,7 +331,7 @@
   <header class="topbar">
     <div class="topbar-row">
       <div class="topbar-id">
-        <p class="eyebrow"><span class="dot"></span><span id="mode-label">TALK ON CANVAS</span></p>
+        <p class="eyebrow"><span class="dot"></span><span>Claude Code skill</span><span class="brand-sep">/</span><span class="brand-name">talk-on-canvas</span><a class="brand-gh" href="https://github.com/winter-blanket/talk-on-canvas" target="_blank" rel="noopener" title="GitHub 저장소 열기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><span class="mode-tag" id="mode-label"></span></p>
         <h1 id="doc-title">{{TITLE}}</h1>
       </div>
       <div class="topbar-side">
@@ -380,6 +411,10 @@
     <!-- 탭 3 — 본문 -->
     <section class="pane is-active" data-pane="body">
       <aside class="rail">
+        <div class="rail-head">
+          <span class="rail-title">최근 생성순</span>
+          <button id="btn-toc" type="button" title="목차 접기" aria-label="목차 접기" aria-expanded="true">«</button>
+        </div>
         <nav id="toc"></nav>
       </aside>
       <main id="main">
@@ -414,7 +449,28 @@
   var modeLabel = document.getElementById("mode-label");
   var paused = sessionStorage.getItem(SKEY + ":paused") === "1";
 
-  modeLabel.textContent = isHttp ? "TALK ON CANVAS" : "TALK ON CANVAS · FILE";
+  modeLabel.textContent = isHttp ? "" : "· file";
+
+  /* ---------- 목차 접기 ---------- */
+
+  // 접힘 상태는 캔버스마다가 아니라 브라우저 전체에 걸쳐 기억한다 — 한 번 접으면 다음 캔버스도 접힌 채로 연다.
+  var TOC_KEY = "talk-on-canvas:toc-collapsed";
+  var btnToc = document.getElementById("btn-toc");
+  function readTocPref() { try { return localStorage.getItem(TOC_KEY) === "1"; } catch (e) { return false; } }
+  function renderToc(collapsed) {
+    document.body.classList.toggle("toc-collapsed", collapsed);
+    btnToc.textContent = collapsed ? "»" : "«";
+    var label = collapsed ? "목차 펼치기" : "목차 접기";
+    btnToc.title = label;
+    btnToc.setAttribute("aria-label", label);
+    btnToc.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  }
+  btnToc.addEventListener("click", function () {
+    var next = !document.body.classList.contains("toc-collapsed");
+    try { localStorage.setItem(TOC_KEY, next ? "1" : "0"); } catch (e) {}
+    renderToc(next);
+  });
+  renderToc(readTocPref());
 
   /* ---------- 탭 ---------- */
 
@@ -554,9 +610,12 @@
     var links = toc.querySelectorAll("a");
     if (!secs.length) return;
     var box = main.getBoundingClientRect().top;
-    var idx = 0;
+    // 화면에서는 역순으로 쌓이므로, 기준선(80px)을 지난 카드 중 가장 아래 것이 지금 읽는 카드다.
+    // 아무것도 안 지났으면 화면 맨 위 카드(=가장 최근 섹션).
+    var idx = secs.length - 1, best = -Infinity;
     secs.forEach(function (s, i) {
-      if (s.getBoundingClientRect().top - box < 80) idx = i;
+      var t = s.getBoundingClientRect().top - box;
+      if (t < 80 && t > best) { best = t; idx = i; }
     });
     Array.prototype.forEach.call(links, function (l, i) {
       l.classList.toggle("active", i === idx);
@@ -576,7 +635,8 @@
   }
   // 토스트를 누르면 이번에 갱신된 곳으로 간다 — 다른 탭에서 바뀌었으면 그 탭으로 옮겨 준다.
   toast.addEventListener("click", function () {
-    var f = document.querySelector("#content section.card.fresh");
+    var fs = document.querySelectorAll("#content section.card.fresh");
+    var f = fs[fs.length - 1];  // 화면상 가장 위에 있는 갱신 카드
     if (f) {
       showTab("body");
       f.scrollIntoView({ behavior: "smooth", block: "start" });
