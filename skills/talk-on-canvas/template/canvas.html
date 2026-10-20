@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="{{LANG}}" data-rev="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%90%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0f1115;
+    --bg-raise: #161a21;
+    --bg-sink: #0b0d11;
+    --line: #262c36;
+    --line-soft: #1d222a;
+    --ink: #e4e7ec;
+    --ink-dim: #a1a9b6;
+    --ink-faint: #6b7483;
+    --accent: #7cc5ff;
+    --accent-ink: #0b1620;
+    --now: #ffd166;
+    --ok: #7ee2a8;
+    --warn: #ff9f8f;
+    --ask: #c4a7ff;
+    --radius: 10px;
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, "Noto Sans KR", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    --mark-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.4 6.2l2.5 2.5 4.7-5.1' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --mark-bang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 2.5v4.2' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round'/%3E%3Ccircle cx='6' cy='9.6' r='1.15'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbf9;
+      --bg-raise: #ffffff;
+      --bg-sink: #f2f2ee;
+      --line: #dcdcd4;
+      --line-soft: #e8e8e1;
+      --ink: #1d2026;
+      --ink-dim: #585f6b;
+      --ink-faint: #8b929d;
+      --accent: #1f6feb;
+      --accent-ink: #ffffff;
+      --now: #a06b00;
+      --ok: #137a4a;
+      --warn: #b23a20;
+      --ask: #6b45c9;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 15.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------- 틀: 상단 바 + 탭 + 패널 ---------- */
+  .app { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+  .topbar { flex: none; background: var(--bg-sink); border-bottom: 1px solid var(--line); }
+  .topbar-row {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+    padding: 18px 28px 12px; flex-wrap: wrap;
+  }
+  .eyebrow {
+    margin: 0 0 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 650;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ok) 22%, transparent);
+  }
+  body.is-paused .eyebrow .dot { background: var(--ink-faint); box-shadow: none; }
+  .topbar h1 { margin: 0; font-size: 19px; line-height: 1.35; letter-spacing: -.012em; font-weight: 680; }
+  .topbar-side { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .rail-meta { margin: 0; font-size: 11.5px; color: var(--ink-faint); font-family: var(--mono); }
+  .rail-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rail-actions button {
+    font: inherit; font-size: 11.5px; padding: 4px 9px; cursor: pointer;
+    background: transparent; color: var(--ink-dim);
+    border: 1px solid var(--line); border-radius: 999px;
+  }
+  .rail-actions button:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* 탭 */
+  .tabs { display: flex; gap: 2px; padding: 0 28px; }
+  .tabs .tab {
+    font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    background: transparent; color: var(--ink-faint);
+    border: 0; border-bottom: 2px solid transparent;
+    padding: 9px 14px 10px; display: flex; align-items: center; gap: 7px;
+  }
+  .tabs .tab:hover { color: var(--ink-dim); }
+  .tabs .tab.is-active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tabs .tab[data-empty] { color: var(--ink-faint); opacity: .5; }
+  .tab-mark { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink-faint); }
+  .tab-mark[data-changed] {
+    width: 6px; height: 6px; padding: 0; border-radius: 50%;
+    background: var(--accent); font-size: 0;
+  }
+
+  /* 패널 */
+  .panes { flex: 1; min-height: 0; }
+  .pane { display: none; height: 100%; min-height: 0; }
+  .pane.is-active { display: block; }
+  .pane[data-pane="body"].is-active { display: grid; grid-template-columns: 272px minmax(0, 1fr); }
+  .pane-scroll { height: 100%; overflow-y: auto; }
+  .pane-empty { color: var(--ink-faint); font-size: 14px; }
+  .pane-empty[hidden] { display: none; }
+
+  /* 본문 탭 좌측 목차 */
+  .rail { border-right: 1px solid var(--line); background: var(--bg-sink); overflow-y: auto; min-height: 0; }
+  nav#toc { padding: 18px 12px 28px; }
+  nav#toc a {
+    display: flex; gap: 8px; align-items: baseline;
+    padding: 6px 8px; border-radius: 7px;
+    color: var(--ink-dim); text-decoration: none; font-size: 13px; line-height: 1.5;
+  }
+  nav#toc a:hover { background: var(--bg-raise); color: var(--ink); }
+  nav#toc a.active { background: var(--bg-raise); color: var(--ink); }
+  nav#toc a .num { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); min-width: 1.4em; }
+  nav#toc a.fresh .txt::after {
+    content: "NEW"; margin-left: 6px; font-family: var(--mono); font-size: 9px;
+    color: var(--accent-ink); background: var(--accent); padding: 1px 4px; border-radius: 3px; vertical-align: 1px;
+  }
+  nav#toc .toc-empty { padding: 6px 8px; font-size: 12.5px; color: var(--ink-faint); }
+
+  /* ---------- main ---------- */
+  main { overflow-y: auto; min-height: 0; scroll-behavior: smooth; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 30px 40px 120px; }
+
+  /* ---------- status board ---------- */
+  .status { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .status.is-empty { display: none; }
+  .cell {
+    background: var(--bg-raise); border: 1px solid var(--line-soft);
+    border-radius: var(--radius); padding: 16px 18px 18px;
+  }
+  .cell.is-empty { display: none; }
+  .cell h3 {
+    margin: 0 0 12px; font-size: 20px; line-height: 1.35; letter-spacing: -.015em;
+    color: var(--ink); font-weight: 680;
+  }
+  .cell ul { margin: 0; padding-left: 18px; }
+  .cell li { font-size: 15.5px; line-height: 1.85; margin: 4px 0; }
+  .cell p { margin: 0; font-size: 15.5px; line-height: 1.85; }
+
+  /* ---------- sections ---------- */
+  section.card {
+    background: var(--bg-raise); border: 1px solid var(--line-soft);
+    border-radius: var(--radius); padding: 24px 28px 26px; margin: 0 0 18px;
+    scroll-margin-top: 18px;
+  }
+  section.card > h2 {
+    margin: 0 0 14px; font-size: 20px; line-height: 1.35; letter-spacing: -.015em; font-weight: 680;
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  }
+  section.card.fresh { border-color: color-mix(in oklab, var(--accent) 45%, var(--line-soft)); }
+  section.card.fresh > h2::after {
+    content: "방금 갱신"; font-family: var(--mono); font-size: 9.5px; font-weight: 500;
+    color: var(--accent-ink); background: var(--accent); padding: 2px 6px; border-radius: 4px; letter-spacing: 0;
+  }
+  section.card > h3 { margin: 22px 0 8px; font-size: 15px; font-weight: 670; letter-spacing: -.005em; }
+  section.card > *:last-child { margin-bottom: 0; }
+  section.card p { margin: 0 0 12px; }
+  section.card ul, section.card ol { margin: 0 0 12px; padding-left: 20px; }
+  section.card li { margin: 3px 0; }
+  section.card li > ul, section.card li > ol { margin: 3px 0; }
+  strong { font-weight: 670; color: var(--ink); }
+  em { font-style: normal; color: var(--ink-dim); }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  /* 체크박스 목록 — 라디오로 보이지 않도록 사각 박스 + 체크 표시 */
+  ul.check { list-style: none; padding-left: 0; }
+  /* li 를 grid 로 만들면 안 된다 — <strong> 같은 인라인 자식이 각각 grid 항목이 돼 칸에 끼인다.
+     박스는 absolute 로 띄우고 본문은 평범한 인라인 흐름으로 둔다. */
+  ul.check li { position: relative; padding-left: 27px; margin: 6px 0; }
+  ul.check li::before {
+    content: ""; position: absolute; left: 0; top: calc(.875em - 8px);
+    width: 16px; height: 16px; box-sizing: border-box;
+    border: 1.6px solid var(--ink-faint); border-radius: 4px;
+    background: transparent;
+  }
+  /* 완료 — 칸을 채우고 체크 표시를 올린다. 표시 색은 카드 배경색이라 라이트·다크 양쪽에서 또렷하다 */
+  ul.check li[data-done]::before { background: var(--ok); border-color: var(--ok); }
+  ul.check li[data-done]::after {
+    content: ""; position: absolute; left: 0; top: calc(.875em - 8px);
+    width: 16px; height: 16px;
+    background-color: var(--bg-raise);
+    -webkit-mask: var(--mark-check) center / 11px 11px no-repeat;
+            mask: var(--mark-check) center / 11px 11px no-repeat;
+  }
+  ul.check li[data-done] { color: var(--ink-dim); }
+  ul.check li[data-done] .what { text-decoration: line-through; text-decoration-color: var(--line); }
+  /* 막힘 */
+  ul.check li[data-blocked]::before { background: var(--warn); border-color: var(--warn); }
+  ul.check li[data-blocked]::after {
+    content: ""; position: absolute; left: 0; top: calc(.875em - 8px);
+    width: 16px; height: 16px;
+    background-color: var(--bg-raise);
+    -webkit-mask: var(--mark-bang) center / 11px 11px no-repeat;
+            mask: var(--mark-bang) center / 11px 11px no-repeat;
+  }
+  /* 할 일 한 줄에 붙는 보조 표기 */
+  ul.check li .why { display: block; color: var(--ink-faint); font-size: 13px; }
+
+  /* 할 일 목록 카드 — 다른 섹션과 구분되게 */
+  section.card.todo > h2 .todo-count {
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0;
+    color: var(--ink-faint); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px;
+  }
+
+  /* key-value */
+  dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 18px; margin: 0 0 14px; }
+  dl.kv dt { color: var(--ink-faint); font-size: 13px; }
+  dl.kv dd { margin: 0; font-size: 14.5px; }
+
+  /* callout */
+  .note {
+    border-left: 3px solid var(--accent); background: var(--bg-sink);
+    padding: 11px 15px; border-radius: 0 7px 7px 0; margin: 0 0 14px;
+    font-size: 14.5px;
+  }
+  .note.warn { border-left-color: var(--warn); }
+  .note.ok { border-left-color: var(--ok); }
+  .note > *:last-child { margin-bottom: 0; }
+  .note .tag {
+    display: block; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 650; margin-bottom: 3px;
+  }
+
+  /* code */
+  pre {
+    margin: 0 0 14px; padding: 13px 15px; overflow-x: auto;
+    background: var(--bg-sink); border: 1px solid var(--line-soft); border-radius: 8px;
+  }
+  pre code { font-family: var(--mono); font-size: 12.8px; line-height: 1.65; white-space: pre; }
+  :not(pre) > code {
+    font-family: var(--mono); font-size: .88em; padding: 1.5px 5px;
+    background: var(--bg-sink); border: 1px solid var(--line-soft); border-radius: 5px;
+  }
+  pre ins { background: color-mix(in oklab, var(--ok) 18%, transparent); text-decoration: none; display: block; }
+  pre del { background: color-mix(in oklab, var(--warn) 18%, transparent); text-decoration: none; display: block; }
+
+  /* table */
+  .scroll-x { overflow-x: auto; margin: 0 0 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-faint); font-weight: 650; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { white-space: nowrap; }
+
+  blockquote {
+    margin: 0 0 14px; padding: 2px 0 2px 16px; border-left: 2px solid var(--line);
+    color: var(--ink-dim);
+  }
+  hr { border: none; border-top: 1px solid var(--line-soft); margin: 22px 0; }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px; padding: 2px 7px;
+    border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); vertical-align: 2px;
+  }
+
+  /* toast */
+  #toast {
+    position: fixed; bottom: 20px; right: 22px; z-index: 50;
+    background: var(--accent); color: var(--accent-ink); border: none;
+    font-family: var(--font); font-size: 12.5px; font-weight: 600;
+    padding: 8px 15px; border-radius: 999px; cursor: pointer;
+    opacity: 0; transform: translateY(6px); transition: opacity .18s, transform .18s;
+    pointer-events: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,.28);
+  }
+  #toast.show { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* mobile */
+  @media (max-width: 860px) {
+    .pane[data-pane="body"].is-active { grid-template-columns: 1fr; }
+    .rail { border-right: none; border-bottom: 1px solid var(--line); max-height: 180px; }
+    .topbar-row { padding: 14px 16px 10px; }
+    .tabs { padding: 0 10px; overflow-x: auto; }
+    .tabs .tab { padding: 9px 10px 10px; white-space: nowrap; }
+    .wrap { padding: 22px 18px 80px; }
+    .status { grid-template-columns: 1fr; }
+    section.card { padding: 18px 18px 20px; }
+    html, body { height: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="topbar-id">
+        <p class="eyebrow"><span class="dot"></span><span id="mode-label">TALK ON CANVAS</span></p>
+        <h1 id="doc-title">{{TITLE}}</h1>
+      </div>
+      <div class="topbar-side">
+        <p class="rail-meta">rev <span id="rev-label">1</span> · <span id="sync-label">{{STARTED}} 시작</span></p>
+        <div class="rail-actions">
+          <button id="btn-pause" type="button">일시정지</button>
+          <button id="btn-top" type="button">맨 위로</button>
+        </div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab" type="button" data-pane="glance">한 눈에 보기<span class="tab-mark"></span></button>
+      <button class="tab" type="button" data-pane="todo">할 일 목록<span class="tab-mark"></span></button>
+      <button class="tab is-active" type="button" data-pane="body">본문<span class="tab-mark"></span></button>
+    </nav>
+  </header>
+
+  <div class="panes">
+
+    <!-- 탭 1 — 한 눈에 보기 -->
+    <section class="pane" data-pane="glance">
+      <div class="pane-scroll">
+        <div class="wrap">
+          <div class="status" id="status">
+<!-- STATUS -->
+            <div class="cell" data-kind="now">
+              <h3>지금 하는 일</h3>
+              <div class="cell-body">
+<!-- ST:now -->
+<!-- /ST:now -->
+              </div>
+            </div>
+            <div class="cell" data-kind="next">
+              <h3>다음</h3>
+              <div class="cell-body">
+<!-- ST:next -->
+<!-- /ST:next -->
+              </div>
+            </div>
+            <div class="cell" data-kind="done">
+              <h3>정해진 것</h3>
+              <div class="cell-body">
+<!-- ST:done -->
+<!-- /ST:done -->
+              </div>
+            </div>
+            <div class="cell" data-kind="ask">
+              <h3>열린 질문</h3>
+              <div class="cell-body">
+<!-- ST:ask -->
+<!-- /ST:ask -->
+              </div>
+            </div>
+<!-- /STATUS -->
+          </div>
+          <p class="pane-empty" id="glance-empty" hidden>아직 적어 둔 것이 없습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 탭 2 — 할 일 목록 -->
+    <section class="pane" data-pane="todo">
+      <div class="pane-scroll">
+        <div class="wrap">
+          <div id="todo">
+            <section class="card todo" id="sec-todo" data-rev="0">
+              <h2>할 일 목록 <span class="todo-count"></span></h2>
+<!-- TODO -->
+<!-- /TODO -->
+            </section>
+          </div>
+          <p class="pane-empty" id="todo-empty" hidden>아직 할 일이 없습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 탭 3 — 본문 -->
+    <section class="pane is-active" data-pane="body">
+      <aside class="rail">
+        <nav id="toc"></nav>
+      </aside>
+      <main id="main">
+        <div class="wrap">
+          <div id="content">
+<!-- SECTIONS_INSERT -->
+          </div>
+        </div>
+      </main>
+    </section>
+
+  </div>
+</div>
+
+<button id="toast" type="button">갱신됨</button>
+
+<script>
+(function () {
+  "use strict";
+
+  var POLL_MS = 1200;        // http 모드: 변경 감지 주기
+  var RELOAD_MS = 4000;      // file 모드: 통째 새로고침 주기
+  var isHttp = location.protocol === "http:" || location.protocol === "https:";
+  var SKEY = "talk-on-canvas:" + location.pathname;
+
+  var root = document.documentElement;
+  var main = document.getElementById("main");
+  var toc = document.getElementById("toc");
+  var toast = document.getElementById("toast");
+  var revLabel = document.getElementById("rev-label");
+  var syncLabel = document.getElementById("sync-label");
+  var modeLabel = document.getElementById("mode-label");
+  var paused = sessionStorage.getItem(SKEY + ":paused") === "1";
+
+  modeLabel.textContent = isHttp ? "TALK ON CANVAS" : "TALK ON CANVAS · FILE";
+
+  /* ---------- 탭 ---------- */
+
+  var PANES = ["glance", "todo", "body"];
+  var tabs = {}, panes = {}, marks = {};
+  PANES.forEach(function (k) {
+    tabs[k] = document.querySelector('.tabs .tab[data-pane="' + k + '"]');
+    panes[k] = document.querySelector('.pane[data-pane="' + k + '"]');
+    marks[k] = tabs[k].querySelector(".tab-mark");
+  });
+
+  var active = sessionStorage.getItem(SKEY + ":tab");
+  if (PANES.indexOf(active) < 0) active = "body";
+
+  // 숨은 탭이 바뀐 것을 놓치지 않도록, 탭별 내용 지문을 들고 비교한다.
+  var sig = {};
+  function paneSig(k) {
+    if (k === "glance") return document.getElementById("status").innerHTML;
+    if (k === "todo") return document.getElementById("todo").innerHTML;
+    return document.getElementById("content").innerHTML;
+  }
+
+  function showTab(k) {
+    active = k;
+    sessionStorage.setItem(SKEY + ":tab", k);
+    PANES.forEach(function (n) {
+      tabs[n].classList.toggle("is-active", n === k);
+      panes[n].classList.toggle("is-active", n === k);
+    });
+    sig[k] = paneSig(k);
+    marks[k].removeAttribute("data-changed");
+    renderMarks();
+    if (k === "body") spy();
+  }
+  PANES.forEach(function (k) {
+    tabs[k].addEventListener("click", function () { showTab(k); });
+  });
+
+  function renderMarks() {
+    // 할 일 탭은 점 대신 완료 개수를 보여준다 — 숫자 자체가 변화 신호다.
+    var items = document.querySelectorAll("#todo ul.check > li");
+    var done = document.querySelectorAll("#todo ul.check > li[data-done]").length;
+    if (items.length && !marks.todo.hasAttribute("data-changed")) {
+      marks.todo.textContent = done + "/" + items.length;
+    } else if (!items.length) {
+      marks.todo.textContent = "";
+    }
+  }
+
+  function scroller() {
+    return active === "body" ? main : panes[active].querySelector(".pane-scroll");
+  }
+
+  /* ---------- 렌더 보강 ---------- */
+
+  function decorate() {
+    var rev = root.dataset.rev;
+
+    // 표는 가로 스크롤 컨테이너로 감싼다
+    Array.prototype.forEach.call(document.querySelectorAll(".pane table"), function (t) {
+      if (!t.parentElement.classList.contains("scroll-x")) {
+        var box = document.createElement("div");
+        box.className = "scroll-x";
+        t.parentNode.insertBefore(box, t);
+        box.appendChild(t);
+      }
+    });
+
+    // 한 눈에 보기 — 비어 있는 칸은 숨긴다
+    var shown = 0;
+    Array.prototype.forEach.call(document.querySelectorAll("#status .cell"), function (cell) {
+      var body = cell.querySelector(".cell-body");
+      var empty = !body || body.textContent.trim() === "";
+      cell.classList.toggle("is-empty", empty);
+      if (!empty) shown++;
+    });
+    document.getElementById("status").classList.toggle("is-empty", shown === 0);
+    document.getElementById("glance-empty").hidden = shown > 0;
+    tabs.glance.toggleAttribute("data-empty", shown === 0);
+
+    // 할 일 목록 — 항목 수와 완료 개수
+    var todoSec = document.getElementById("sec-todo");
+    var items = todoSec ? todoSec.querySelectorAll("ul.check > li") : [];
+    var done = todoSec ? todoSec.querySelectorAll("ul.check > li[data-done]").length : 0;
+    document.getElementById("todo").hidden = items.length === 0;
+    document.getElementById("todo-empty").hidden = items.length > 0;
+    tabs.todo.toggleAttribute("data-empty", items.length === 0);
+    if (todoSec) {
+      var cnt = todoSec.querySelector(".todo-count");
+      if (cnt) cnt.textContent = items.length ? done + " / " + items.length + " 완료" : "";
+      todoSec.classList.toggle("fresh", todoSec.dataset.rev === rev);
+    }
+
+    // 목차 재생성 + 최신 rev 섹션 강조 (본문 탭 전용)
+    var secs = document.querySelectorAll("#content section.card");
+    toc.innerHTML = "";
+    if (!secs.length) {
+      var e = document.createElement("p");
+      e.className = "toc-empty";
+      e.textContent = "아직 섹션이 없습니다.";
+      toc.appendChild(e);
+    }
+    Array.prototype.forEach.call(secs, function (sec, i) {
+      var fresh = sec.dataset.rev === rev;
+      sec.classList.toggle("fresh", fresh);
+      var h2 = sec.querySelector("h2");
+      var a = document.createElement("a");
+      a.href = "#" + sec.id;
+      if (fresh) a.className = "fresh";
+      a.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="txt"></span>';
+      a.querySelector(".txt").textContent = h2 ? h2.textContent.trim() : sec.id;
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      toc.appendChild(a);
+    });
+    tabs.body.toggleAttribute("data-empty", secs.length === 0);
+
+    // 숨은 탭의 변화 표시
+    PANES.forEach(function (k) {
+      var cur = paneSig(k);
+      if (sig[k] === undefined || k === active) { sig[k] = cur; marks[k].removeAttribute("data-changed"); return; }
+      if (cur !== sig[k]) marks[k].setAttribute("data-changed", "");
+    });
+    renderMarks();
+
+    revLabel.textContent = rev;
+    spy();
+  }
+
+  /* ---------- 스크롤 스파이 ---------- */
+
+  function spy() {
+    if (active !== "body") return;
+    var secs = Array.prototype.slice.call(document.querySelectorAll("#content section.card"));
+    var links = toc.querySelectorAll("a");
+    if (!secs.length) return;
+    var box = main.getBoundingClientRect().top;
+    var idx = 0;
+    secs.forEach(function (s, i) {
+      if (s.getBoundingClientRect().top - box < 80) idx = i;
+    });
+    Array.prototype.forEach.call(links, function (l, i) {
+      l.classList.toggle("active", i === idx);
+    });
+  }
+  main.addEventListener("scroll", spy, { passive: true });
+  window.addEventListener("scroll", spy, { passive: true });
+
+  /* ---------- 토스트 ---------- */
+
+  var toastTimer;
+  function flash(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 4000);
+  }
+  // 토스트를 누르면 이번에 갱신된 곳으로 간다 — 다른 탭에서 바뀌었으면 그 탭으로 옮겨 준다.
+  toast.addEventListener("click", function () {
+    var f = document.querySelector("#content section.card.fresh");
+    if (f) {
+      showTab("body");
+      f.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      var changed = PANES.filter(function (k) { return marks[k].hasAttribute("data-changed"); });
+      if (changed.length) showTab(changed[0]);
+    }
+    toast.classList.remove("show");
+  });
+
+  function stamp() {
+    var d = new Date();
+    var p = function (n) { return (n < 10 ? "0" : "") + n; };
+    var t = p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+    sessionStorage.setItem(SKEY + ":sync", t);
+    syncLabel.textContent = t + " 갱신";
+  }
+  var lastSync = sessionStorage.getItem(SKEY + ":sync");
+  if (lastSync) syncLabel.textContent = lastSync + " 갱신";
+
+  /* ---------- 일시정지 ---------- */
+
+  var btnPause = document.getElementById("btn-pause");
+  function renderPause() {
+    document.body.classList.toggle("is-paused", paused);
+    btnPause.textContent = paused ? "자동 갱신 켜기" : "일시정지";
+  }
+  btnPause.addEventListener("click", function () {
+    paused = !paused;
+    sessionStorage.setItem(SKEY + ":paused", paused ? "1" : "0");
+    renderPause();
+    if (!paused && isHttp) poll();
+  });
+  renderPause();
+
+  document.getElementById("btn-top").addEventListener("click", function () {
+    var sc = scroller();
+    if (sc) sc.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  /* ---------- 갱신: http 모드 (제자리 교체) ---------- */
+
+  function swap(doc) {
+    var sc = scroller();
+    var curTop = sc ? sc.scrollTop : 0;
+    var curWin = window.scrollY;
+    document.getElementById("status").innerHTML = doc.getElementById("status").innerHTML;
+    document.getElementById("todo").innerHTML = doc.getElementById("todo").innerHTML;
+    document.getElementById("content").innerHTML = doc.getElementById("content").innerHTML;
+    document.getElementById("doc-title").textContent = doc.getElementById("doc-title").textContent;
+    document.title = doc.title;
+    root.dataset.rev = doc.documentElement.dataset.rev;
+    decorate();
+    var sc2 = scroller();
+    if (sc2) sc2.scrollTop = curTop;
+    window.scrollTo(0, curWin);
+    stamp();
+    flash("갱신됨 · 새 내용 보기 →");
+  }
+
+  function poll() {
+    if (paused) return;
+    fetch(location.pathname + "?_=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        if (!doc.getElementById("content")) return;
+        if (doc.documentElement.dataset.rev !== root.dataset.rev) swap(doc);
+      })
+      .catch(function () { /* 서버가 내려갔을 수 있다 — 조용히 재시도 */ });
+  }
+
+  /* ---------- 갱신: file 모드 (스크롤 복원 새로고침) ---------- */
+
+  function fileMode() {
+    var saved = sessionStorage.getItem(SKEY + ":top");
+    if (saved) {
+      var sc = scroller();
+      if (sc) sc.scrollTop = parseFloat(saved);
+      window.scrollTo(0, parseFloat(saved));
+    }
+    var savedRev = sessionStorage.getItem(SKEY + ":rev");
+    if (savedRev && savedRev !== root.dataset.rev) { stamp(); flash("갱신됨 · 새 내용 보기 →"); }
+    sessionStorage.setItem(SKEY + ":rev", root.dataset.rev);
+
+    function save() {
+      var sc = scroller();
+      sessionStorage.setItem(SKEY + ":top", String((sc && sc.scrollTop) || window.scrollY || 0));
+    }
+    window.addEventListener("beforeunload", save);
+    setInterval(function () {
+      if (paused || document.hidden) return;
+      save();
+      location.reload();
+    }, RELOAD_MS);
+  }
+
+  showTab(active);
+  decorate();
+  if (isHttp) { setInterval(poll, POLL_MS); } else { fileMode(); }
+})();
+</script>
+</body>
+</html>

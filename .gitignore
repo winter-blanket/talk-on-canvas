@@ -1,0 +1,5 @@
+claude-canvas/
+.DS_Store
+
+# omc 도구 로컬 상태 (세션·HUD 캐시). 원격에 올리지 않는다.
+.omc/
