@@ -1,7 +1,7 @@
 {
   "name": "talk-on-canvas",
   "description": "터미널 대신 브라우저에 띄운 HTML 캔버스 한 장을 대화 속도로 갱신하며 작업하는 Claude Code 스킬. 주제가 무엇이든(설계·조사·디버깅·기획) 그때그때 맞는 섹션을 쌓고, 결정·열린 질문·할 일은 상단 상태판과 할 일 목록이 항상 들고 있는다.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "winter-blanket",
     "url": "https://github.com/winter-blanket"

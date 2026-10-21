@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # talk-on-canvas 보조 스크립트.
 #   bash canvas.sh open "<제목>" [저장경로]   캔버스 생성 + 로컬 서버 + 브라우저 열기
+#   bash canvas.sh list [폴더]                기존 캔버스 목록 (최근 수정순, 이어 쓰기 후보 판단용)
+#   bash canvas.sh resume <저장경로>          기존 캔버스를 그대로 두고 서버 + 브라우저만 다시 열기
 #   bash canvas.sh stop <저장경로>            해당 캔버스의 로컬 서버 종료
 set -uo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
+
+DEFAULT_DIR="$HOME/claude-canvas"
 
 find_template() {
   local c
@@ -37,7 +41,7 @@ cmd_open() {
   local title="${1:-작업 캔버스}" dest="${2:-}"
   local today; today="$(date +%Y-%m-%d)"
   if [ -z "$dest" ]; then
-    dest="$HOME/claude-canvas/${today}-$(slugify "$title").html"
+    dest="$DEFAULT_DIR/${today}-$(slugify "$title").html"
   fi
   case "$dest" in /*) ;; *) dest="$(pwd)/$dest" ;; esac
 
@@ -54,6 +58,45 @@ html = html.replace('{{TITLE}}', esc).replace('{{STARTED}}', started).replace('{
 io.open(path, 'w', encoding='utf-8').write(html)
 PY
 
+  serve_and_open "$dest"
+}
+
+cmd_list() {
+  local dir="${1:-$DEFAULT_DIR}"
+  [ -d "$dir" ] || { echo "NO_CANVASES"; return 0; }
+  python3 - "$dir" <<'PY'
+import glob, html, io, os, re, sys, time
+d = sys.argv[1]
+files = [f for f in glob.glob(os.path.join(d, '*.html')) if not f.endswith('.artifact.html')]
+files.sort(key=os.path.getmtime, reverse=True)
+if not files:
+    print('NO_CANVASES'); sys.exit()
+def text(frag):
+    return re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', frag))).strip()
+for f in files[:15]:
+    src = io.open(f, encoding='utf-8', errors='replace').read()
+    title = re.search(r'<title>(.*?)</title>', src, re.S)
+    rev = re.search(r'<html[^>]*data-rev="(\d+)"', src)
+    now = re.search(r'<!-- ST:now -->(.*?)<!-- /ST:now -->', src, re.S)
+    content = src.split('<!-- SECTIONS_INSERT -->', 1)[-1]
+    heads = [text(h) for h in re.findall(r'<section class="card[^"]*"[^>]*>\s*<h2>(.*?)</h2>', content, re.S)]
+    print('CANVAS=%s' % f)
+    print('  title: %s' % (text(title.group(1)) if title else '?'))
+    print('  updated: %s · rev %s' % (time.strftime('%Y-%m-%d %H:%M', time.localtime(os.path.getmtime(f))), rev.group(1) if rev else '?'))
+    if now and text(now.group(1)): print('  now: %s' % text(now.group(1))[:160])
+    if heads: print('  sections: %s' % ' · '.join(heads))
+PY
+}
+
+cmd_resume() {
+  local dest="${1:-}"; [ -n "$dest" ] || die "경로를 주세요."
+  case "$dest" in /*) ;; *) dest="$(pwd)/$dest" ;; esac
+  [ -f "$dest" ] || die "캔버스 파일이 없습니다: $dest"
+  serve_and_open "$dest"
+}
+
+serve_and_open() {
+  local dest="$1"
   # 같은 폴더를 이미 서빙 중이면 재사용
   local pidf="${dest}.server"
   if [ -f "$pidf" ]; then
@@ -115,6 +158,8 @@ cmd_stop() {
 
 case "${1:-}" in
   open) shift; cmd_open "$@" ;;
+  list) shift; cmd_list "$@" ;;
+  resume) shift; cmd_resume "$@" ;;
   stop) shift; cmd_stop "$@" ;;
-  *) die "사용법: canvas.sh open \"<제목>\" [경로] | canvas.sh stop <경로>" ;;
+  *) die "사용법: canvas.sh open \"<제목>\" [경로] | list [폴더] | resume <경로> | stop <경로>" ;;
 esac

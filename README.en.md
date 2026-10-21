@@ -28,6 +28,7 @@ Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), whi
 
 ### 2. The canvas is created and your browser opens automatically.
 
+- It first looks in `~/claude-canvas/` for a **canvas you already started on the same topic**. If one looks like a match (by title and section headings), it asks whether to continue in that file or start a new one.
 - The default path is `~/claude-canvas/<date>-<title>.html` — outside any git repo, so your working tree stays clean.
 - Want it somewhere else? Say so when you invoke it.
 - Whatever you discussed *before* invoking the plugin is read and backfilled, so you start with a populated canvas rather than a blank one.
@@ -45,7 +46,7 @@ Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), whi
 | Status board (4 cells, top) | `Now` · `Next` · `Decided` · `Open questions`. Holds the things that otherwise vanish into scrollback |
 | To-do list | Only actions *you* must take. The `3 / 7 done` counter is computed automatically. Hides itself when empty |
 | Sections | One per topic. Revisiting a topic rewrites its section rather than stacking a new one |
-| Table of contents (left) | Section list, with a `NEW` badge on whatever was updated this turn |
+| Table of contents (left) | Section list, newest first — same order as the cards. A `NEW` badge marks whatever was updated this turn; the `«` button collapses it |
 
 The canvas is **current state**, not a conversation log. It grows in accuracy, not in length.
 
@@ -97,7 +98,7 @@ talk-on-canvas/
 │       ├── template/
 │       │   └── canvas.html          # Canvas template (styles and script included)
 │       └── scripts/
-│           └── canvas.sh            # Create canvas, run local server, open browser
+│           └── canvas.sh            # Create / list / resume canvas, run local server, open browser
 ├── LICENSE
 ├── README.md
 └── README.en.md
