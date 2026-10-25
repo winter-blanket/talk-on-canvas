@@ -161,6 +161,8 @@
   /* ---------- main ---------- */
   main { overflow-y: auto; min-height: 0; scroll-behavior: smooth; }
   .wrap { max-width: 860px; margin: 0 auto; padding: 30px 40px 120px; }
+  /* 본문 탭은 목차 옆 남은 가로폭을 다 쓴다 — 한 눈에 보기·할 일 목록은 읽기 폭 860px 유지 */
+  .pane[data-pane="body"] .wrap { max-width: none; }
   /* 본문 카드는 최신이 맨 위 — 문서 순서(=목차 번호)는 생성 순 그대로 두고 화면에서만 뒤집는다 */
   #content { display: flex; flex-direction: column-reverse; }
 
@@ -323,6 +325,26 @@
     section.card { padding: 18px 18px 20px; }
     html, body { height: auto; }
   }
+  /* 형광펜 — 드래그한 글자를 칠한다. 다크 모드에서도 같은 형광 노랑에 어두운 글자로 읽힌다 */
+  x-hl {
+    background: #fff35c; color: #1a1a1a; border-radius: 2px; cursor: pointer;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  x-hl:hover { background: #ffe81f; }
+  #hl-pop {
+    position: fixed; z-index: 60; display: none; transform: translateX(-50%);
+    font-family: var(--font); font-size: 12px; font-weight: 600;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer;
+    background: var(--bg-raise); color: var(--ink); border: 1px solid var(--line);
+    box-shadow: 0 6px 20px rgba(0,0,0,.28);
+  }
+  #hl-pop.show { display: block; }
+  #hl-pop:hover { border-color: var(--ink-faint); }
+  #btn-hl::before {
+    content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+    margin-right: 6px; vertical-align: 0; background: #fff35c;
+  }
+  body.hl-off #btn-hl::before { background: var(--line); }
 </style>
 </head>
 <body>
@@ -337,6 +359,7 @@
       <div class="topbar-side">
         <p class="rail-meta">rev <span id="rev-label">1</span> · <span id="sync-label">{{STARTED}} 시작</span></p>
         <div class="rail-actions">
+          <button id="btn-hl" type="button">형광펜</button>
           <button id="btn-pause" type="button">일시정지</button>
           <button id="btn-top" type="button">맨 위로</button>
         </div>
@@ -488,9 +511,9 @@
   // 숨은 탭이 바뀐 것을 놓치지 않도록, 탭별 내용 지문을 들고 비교한다.
   var sig = {};
   function paneSig(k) {
-    if (k === "glance") return document.getElementById("status").innerHTML;
-    if (k === "todo") return document.getElementById("todo").innerHTML;
-    return document.getElementById("content").innerHTML;
+    var id = k === "glance" ? "status" : k === "todo" ? "todo" : "content";
+    // 형광펜은 사용자가 칠한 것이라 '바뀜' 신호에서 뺀다
+    return document.getElementById(id).innerHTML.replace(/<\/?x-hl[^>]*>/g, "");
   }
 
   function showTab(k) {
@@ -538,6 +561,9 @@
         box.appendChild(t);
       }
     });
+
+    // 갱신으로 새로 들어온 내용에 형광펜을 다시 칠한다
+    paintAll();
 
     // 한 눈에 보기 — 비어 있는 칸은 숨긴다
     var shown = 0;
@@ -678,6 +704,166 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
+  /* ---------- 형광펜 ---------- */
+
+  // 드래그한 글자에 형광펜을 칠하고, 칠한 곳을 누르면 지울 수 있다.
+  // 칠한 자리는 이 브라우저에만 저장된다(Claude 는 모른다). 캔버스가 갱신돼 카드가 통째로 바뀌어도
+  // 같은 글을 다시 찾아 칠하도록, 위치 대신 '칠한 글 + 앞뒤 문맥'으로 기억한다.
+  var HL_KEY = SKEY + ":hl";
+  var HL_ON_KEY = "talk-on-canvas:hl-on";
+  var HL_CTX = 32;
+  var SCOPES = "#content section.card[id], #todo section.card[id], #status .cell[data-kind]";
+  var btnHl = document.getElementById("btn-hl");
+  var hlOn = (function () { try { return localStorage.getItem(HL_ON_KEY) !== "0"; } catch (e) { return true; } })();
+  var hls = (function () { try { return JSON.parse(localStorage.getItem(HL_KEY) || "[]"); } catch (e) { return []; } })();
+  function saveHls() { try { localStorage.setItem(HL_KEY, JSON.stringify(hls)); } catch (e) {} }
+
+  function renderHlBtn() {
+    document.body.classList.toggle("hl-off", !hlOn);
+    btnHl.title = hlOn ? "드래그하면 형광펜이 칠해집니다 — 눌러서 끄기" : "형광펜 꺼짐 — 눌러서 켜기";
+    btnHl.setAttribute("aria-pressed", hlOn ? "true" : "false");
+  }
+  btnHl.addEventListener("click", function () {
+    hlOn = !hlOn;
+    try { localStorage.setItem(HL_ON_KEY, hlOn ? "1" : "0"); } catch (e) {}
+    renderHlBtn();
+    flash(hlOn ? "형광펜 켬 · 드래그하면 칠해져요" : "형광펜 끔 · 드래그해도 칠하지 않아요");
+  });
+  renderHlBtn();
+
+  function scopeKey(el) { return el.id ? "#" + el.id : "cell:" + el.dataset.kind; }
+  function findScope(key) {
+    return key.indexOf("cell:") === 0
+      ? document.querySelector('#status .cell[data-kind="' + key.slice(5) + '"]')
+      : document.getElementById(key.slice(1));
+  }
+  function elOf(node) { return node.nodeType === 1 ? node : node.parentElement; }
+  function textOffset(scope, node, off) {
+    var r = document.createRange();
+    r.selectNodeContents(scope);
+    r.setEnd(node, off);
+    return r.toString().length;
+  }
+
+  // 같은 글이 여러 번 나오면 앞뒤 문맥이 가장 많이 겹치는 곳, 같으면 원래 자리에 가까운 곳
+  function overlap(a, b, fromEnd) {
+    var n = 0, la = a.length, lb = b.length;
+    while (n < la && n < lb && (fromEnd ? a[la - 1 - n] === b[lb - 1 - n] : a[n] === b[n])) n++;
+    return n;
+  }
+  function locate(text, h) {
+    var best = -1, bestScore = -1, i = text.indexOf(h.quote);
+    while (i >= 0) {
+      var end = i + h.quote.length;
+      var score = overlap(text.slice(Math.max(0, i - h.prefix.length), i), h.prefix, true)
+                + overlap(text.slice(end, end + h.suffix.length), h.suffix, false);
+      if (score > bestScore || (score === bestScore && Math.abs(i - h.at) < Math.abs(best - h.at))) {
+        best = i; bestScore = score;
+      }
+      i = text.indexOf(h.quote, i + 1);
+    }
+    return best;
+  }
+
+  function paint(scope, h) {
+    var start = locate(scope.textContent, h);
+    if (start < 0) return;  // Claude 가 그 문장을 고쳐 썼다 — 기록은 두고 칠하지만 않는다
+    var end = start + h.quote.length, pos = 0, parts = [];
+    var w = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+    for (var n = w.nextNode(); n && pos < end; n = w.nextNode()) {
+      var len = n.data.length, s = Math.max(start - pos, 0), e = Math.min(end - pos, len);
+      if (s < e) parts.push([n, s, e]);
+      pos += len;
+    }
+    parts.forEach(function (p) {
+      var node = p[0];
+      // 표·목록의 태그 사이 줄바꿈은 감싸지 않는다 (감싸면 표 구조가 깨진다)
+      if (!node.data.slice(p[1], p[2]).trim() &&
+          /^(TABLE|THEAD|TBODY|TFOOT|TR|UL|OL|DL|SECTION|DIV)$/.test(node.parentNode.nodeName)) return;
+      if (p[2] < node.data.length) node.splitText(p[2]);
+      var mid = p[1] > 0 ? node.splitText(p[1]) : node;
+      var m = document.createElement("x-hl");
+      m.dataset.hl = h.id;
+      mid.parentNode.insertBefore(m, mid);
+      m.appendChild(mid);
+    });
+  }
+
+  function paintAll() {
+    hls.forEach(function (h) {
+      var scope = findScope(h.scope);
+      if (scope && !scope.querySelector('x-hl[data-hl="' + h.id + '"]')) paint(scope, h);
+    });
+  }
+
+  var justPainted = false;
+  function onSelect() {
+    if (!hlOn) return;
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    var r = sel.getRangeAt(0);
+    var a = elOf(r.startContainer), b = elOf(r.endContainer);
+    var sa = a && a.closest(SCOPES), sb = b && b.closest(SCOPES);
+    if (!sa) return;  // 탭·목차·상단 바 같은 화면 뼈대는 칠하지 않는다
+    if (sa !== sb) { flash("형광펜은 카드 하나 안에서만 칠할 수 있어요"); return; }
+    var text = sa.textContent;
+    var s = textOffset(sa, r.startContainer, r.startOffset);
+    var e = textOffset(sa, r.endContainer, r.endOffset);
+    while (s < e && /\s/.test(text[s])) s++;
+    while (e > s && /\s/.test(text[e - 1])) e--;
+    if (e <= s) return;
+    var h = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      scope: scopeKey(sa), quote: text.slice(s, e), at: s,
+      prefix: text.slice(Math.max(0, s - HL_CTX), s), suffix: text.slice(e, e + HL_CTX)
+    };
+    hls.push(h);
+    saveHls();
+    sel.removeAllRanges();
+    paint(sa, h);
+    justPainted = true;
+    setTimeout(function () { justPainted = false; }, 0);
+  }
+  document.addEventListener("mouseup", function () { setTimeout(onSelect, 0); });
+
+  // 칠한 곳을 누르면 '지우기' 버튼이 뜬다
+  var pop = document.createElement("button");
+  pop.id = "hl-pop";
+  pop.type = "button";
+  pop.textContent = "형광펜 지우기";
+  document.body.appendChild(pop);
+  var popId = null;
+  function hidePop() { pop.classList.remove("show"); popId = null; }
+  document.addEventListener("click", function (ev) {
+    if (ev.target === pop || justPainted) return;
+    var m = ev.target.closest && ev.target.closest("x-hl");
+    var sel = window.getSelection();
+    if (!m || (sel && !sel.isCollapsed)) { hidePop(); return; }
+    popId = m.dataset.hl;
+    var rc = m.getBoundingClientRect();
+    pop.style.left = (rc.left + rc.width / 2) + "px";
+    pop.style.top = Math.max(8, rc.top - 36) + "px";
+    pop.classList.add("show");
+  });
+  pop.addEventListener("click", function () {
+    var id = popId;
+    hls = hls.filter(function (h) { return h.id !== id; });
+    saveHls();
+    Array.prototype.forEach.call(document.querySelectorAll('x-hl[data-hl="' + id + '"]'), function (m) {
+      var parent = m.parentNode;
+      while (m.firstChild) parent.insertBefore(m.firstChild, m);
+      parent.removeChild(m);
+      parent.normalize();
+    });
+    hidePop();
+  });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") hidePop(); });
+  main.addEventListener("scroll", hidePop, { passive: true });
+  Array.prototype.forEach.call(document.querySelectorAll(".pane-scroll"), function (el) {
+    el.addEventListener("scroll", hidePop, { passive: true });
+  });
+  window.addEventListener("scroll", hidePop, { passive: true });
+
   /* ---------- 갱신: http 모드 (제자리 교체) ---------- */
 
   function swap(doc) {
@@ -690,6 +876,7 @@
     document.getElementById("doc-title").textContent = doc.getElementById("doc-title").textContent;
     document.title = doc.title;
     root.dataset.rev = doc.documentElement.dataset.rev;
+    hidePop();
     decorate();
     var sc2 = scroller();
     if (sc2) sc2.scrollTop = curTop;
