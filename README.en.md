@@ -28,8 +28,9 @@ Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), whi
 
 ### 2. The canvas is created and your browser opens automatically.
 
-- It first looks in `~/claude-canvas/` for a **canvas you already started on the same topic**. If one looks like a match (by title and section headings), it asks whether to continue in that file or start a new one.
-- The default path is `~/claude-canvas/<date>-<title>.html` — outside any git repo, so your working tree stays clean.
+- If the directory you ran it from has a `canvas` folder, canvases go there; otherwise it asks where to save (default `<that directory>/canvas/`). [study-on-canvas](https://github.com/winter-blanket/study-on-canvas) uses the same folder.
+- Before creating a new one, it looks in that folder for a **canvas you already started on the same topic**. If one looks like a match (by title and section headings), it asks whether to continue in that file or start a new one.
+- Files are named `<date>-<title>.html`. Inside a git repo, add `canvas/` to `.gitignore` if you don't want to commit them.
 - Want it somewhere else? Say so when you invoke it.
 - Whatever you discussed *before* invoking the plugin is read and backfilled, so you start with a populated canvas rather than a blank one.
 
@@ -43,10 +44,11 @@ Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), whi
 
 | Area | Role |
 |------|------|
-| Status board (4 cells, top) | `Now` · `Next` · `Decided` · `Open questions`. Holds the things that otherwise vanish into scrollback |
+| At a glance (right drawer) | `Now` · `Next` · `Decided` · `Open questions`. Holds the things that otherwise vanish into scrollback. Open it with the `한 눈에 보기` button; drag its left edge to resize (35% of the screen by default) |
 | To-do list | Only actions *you* must take. The `3 / 7 done` counter is computed automatically. Hides itself when empty |
 | Sections | One per topic. Revisiting a topic rewrites its section rather than stacking a new one |
 | Table of contents (left) | Section list, newest first — same order as the cards. A `NEW` badge marks whatever was updated this turn; the `«` button collapses it |
+| Theme · back to top | The sun/moon icon switches light/dark (follows the system until you pick). Once you scroll down, a floating `↑` button appears bottom-right |
 
 The canvas is **current state**, not a conversation log. It grows in accuracy, not in length.
 
@@ -78,7 +80,7 @@ The installed plugin lives at `~/.claude/plugins/cache/talk-on-canvas/talk-on-ca
 ## How it works
 
 - A local HTTP server bound to `127.0.0.1` serves the canvas folder, and the page compares `data-rev` values to detect updates.
-- Without python3, or if the port can't be bound, it falls back to `file://` mode and does a full reload every 4 seconds. Scroll position is restored.
+- Without python3, or if the port can't be bound, it falls back to `file://` mode and refreshes with full reloads. It never reloads while you are scrolling or selecting (it waits for 5 seconds of idle), and backs off from 4 s up to 60 s while the content stays the same. Scroll position is restored per tab.
 - A `<filename>.server` file (pid and port) sits next to the canvas and is removed when the server stops.
 
 ## Language

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # talk-on-canvas 보조 스크립트.
-#   bash canvas.sh open "<제목>" [저장경로]   캔버스 생성 + 로컬 서버 + 브라우저 열기
+#   bash canvas.sh where                      기본 저장 폴더(<현재 경로>/canvas)와 존재 여부
+#   bash canvas.sh open "<제목>" [저장경로]   캔버스 생성 + 로컬 서버 + 브라우저 열기 (저장경로는 파일 또는 폴더)
 #   bash canvas.sh list [폴더]                기존 캔버스 목록 (최근 수정순, 이어 쓰기 후보 판단용)
 #   bash canvas.sh resume <저장경로>          기존 캔버스를 그대로 두고 서버 + 브라우저만 다시 열기
 #   bash canvas.sh stop <저장경로>            해당 캔버스의 로컬 서버 종료
@@ -10,7 +11,8 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-DEFAULT_DIR="$HOME/claude-canvas"
+# 기본 저장 폴더는 세션이 시작된 경로의 canvas/ — study-on-canvas 와 같은 폴더를 쓴다
+DEFAULT_DIR="$(pwd)/canvas"
 
 find_template() {
   local c
@@ -40,10 +42,11 @@ PY
 cmd_open() {
   local title="${1:-작업 캔버스}" dest="${2:-}"
   local today; today="$(date +%Y-%m-%d)"
-  if [ -z "$dest" ]; then
-    dest="$DEFAULT_DIR/${today}-$(slugify "$title").html"
-  fi
+  local name="${today}-$(slugify "$title").html"
+  [ -n "$dest" ] || dest="$DEFAULT_DIR"
   case "$dest" in /*) ;; *) dest="$(pwd)/$dest" ;; esac
+  # 폴더를 주면 그 안에 <날짜>-<제목>.html 로 만든다
+  case "$dest" in *.html) ;; *) dest="${dest%/}/$name" ;; esac
 
   local tpl; tpl="$(find_template)" || die "템플릿(canvas.html)을 찾지 못했습니다."
   mkdir -p "$(dirname "$dest")" || die "폴더를 만들 수 없습니다: $(dirname "$dest")"
@@ -59,6 +62,11 @@ io.open(path, 'w', encoding='utf-8').write(html)
 PY
 
   serve_and_open "$dest"
+}
+
+cmd_where() {
+  echo "DIR=$DEFAULT_DIR"
+  [ -d "$DEFAULT_DIR" ] && echo "EXISTS=1" || echo "EXISTS=0"
 }
 
 cmd_list() {
@@ -157,9 +165,10 @@ cmd_stop() {
 }
 
 case "${1:-}" in
+  where) shift; cmd_where "$@" ;;
   open) shift; cmd_open "$@" ;;
   list) shift; cmd_list "$@" ;;
   resume) shift; cmd_resume "$@" ;;
   stop) shift; cmd_stop "$@" ;;
-  *) die "사용법: canvas.sh open \"<제목>\" [경로] | list [폴더] | resume <경로> | stop <경로>" ;;
+  *) die "사용법: canvas.sh where | open \"<제목>\" [경로] | list [폴더] | resume <경로> | stop <경로>" ;;
 esac
