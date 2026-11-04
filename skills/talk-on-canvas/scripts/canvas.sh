@@ -85,13 +85,11 @@ for f in files[:15]:
     src = io.open(f, encoding='utf-8', errors='replace').read()
     title = re.search(r'<title>(.*?)</title>', src, re.S)
     rev = re.search(r'<html[^>]*data-rev="(\d+)"', src)
-    now = re.search(r'<!-- ST:now -->(.*?)<!-- /ST:now -->', src, re.S)
     content = src.split('<!-- SECTIONS_INSERT -->', 1)[-1]
     heads = [text(h) for h in re.findall(r'<section class="card[^"]*"[^>]*>\s*<h2>(.*?)</h2>', content, re.S)]
     print('CANVAS=%s' % f)
     print('  title: %s' % (text(title.group(1)) if title else '?'))
     print('  updated: %s · rev %s' % (time.strftime('%Y-%m-%d %H:%M', time.localtime(os.path.getmtime(f))), rev.group(1) if rev else '?'))
-    if now and text(now.group(1)): print('  now: %s' % text(now.group(1))[:160])
     if heads: print('  sections: %s' % ' · '.join(heads))
 PY
 }

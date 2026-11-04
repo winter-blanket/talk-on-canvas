@@ -38,16 +38,17 @@ Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), whi
 
 - The terminal only gets 2–4 lines saying what changed. Conclusions, reasoning, tables, and code all live on the canvas.
 - The browser polls every 1.2 seconds and swaps **only the changed parts** — no flicker, no scroll jumps, no refresh needed.
-- Anything *you* need to do goes into the **to-do list** pinned at the top of the canvas, as checkboxes. Done and blocked states are kept current as the conversation goes.
+- Anything *you* need to do or answer goes into the **to-do list**, as checkboxes. Done and blocked states are kept current as the conversation goes.
 
 ## Layout
 
 | Area | Role |
 |------|------|
-| At a glance (right drawer) | `Now` · `Next` · `Decided` · `Open questions`. Holds the things that otherwise vanish into scrollback. Open it with the `한 눈에 보기` button; drag its left edge to resize (35% of the screen by default) |
-| To-do list | Only actions *you* must take. The `3 / 7 done` counter is computed automatically. Hides itself when empty |
+| To-do list | Only actions *you* must take and questions *you* must answer. The `3 / 7 done` counter is computed automatically. Hides itself when empty |
 | Sections | One per topic. Revisiting a topic rewrites its section rather than stacking a new one |
-| Table of contents (left) | Section list, newest first — same order as the cards. A `NEW` badge marks whatever was updated this turn; the `«` button collapses it |
+| Table of contents (left) | Section list, newest first by default; switch to oldest first with the `과거 생성순` button. Cards follow the same order. A `NEW` badge marks whatever was updated this turn; the `«` button collapses it |
+| Deliverables tab | Say "add this to deliverables" and the result is written up as a standalone document (e.g. a customer persona). The tab appears with the first deliverable; each card has an `Export` button for .md · .docx · .pptx · .txt · .xlsx · .csv |
+| Highlights tab | Collects only what you highlighted. Same table of contents and card titles as the body; each card lists its highlights, and clicking one jumps to it in the body |
 | Theme · back to top | The sun/moon icon switches light/dark (follows the system until you pick). Once you scroll down, a floating `↑` button appears bottom-right |
 
 The canvas is **current state**, not a conversation log. It grows in accuracy, not in length.

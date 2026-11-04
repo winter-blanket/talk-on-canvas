@@ -8,7 +8,7 @@
   // 고른 테마를 그리기 전에 먼저 입힌다 — 다크↔라이트 깜빡임 방지. 고른 적 없으면 시스템 설정을 따른다
   try { var t = localStorage.getItem("talk-on-canvas:theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
 </script>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%90%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     color-scheme: light dark;
@@ -145,8 +145,9 @@
   .panes { flex: 1; min-height: 0; }
   .pane { display: none; height: 100%; min-height: 0; }
   .pane.is-active { display: block; }
-  .pane[data-pane="body"].is-active { display: grid; grid-template-columns: 272px minmax(0, 1fr); }
-  body.toc-collapsed .pane[data-pane="body"].is-active { grid-template-columns: 44px minmax(0, 1fr); }
+  /* 본문 · 산출물 · 형광펜 모아보기 — 좌측 목차 + 카드 열 */
+  .pane.has-rail.is-active { display: grid; grid-template-columns: 272px minmax(0, 1fr); }
+  body.toc-collapsed .pane.has-rail.is-active { grid-template-columns: 44px minmax(0, 1fr); }
   .pane-scroll { height: 100%; overflow-y: auto; }
   .pane-empty { color: var(--ink-faint); font-size: 14px; }
   .pane-empty[hidden] { display: none; }
@@ -154,58 +155,52 @@
   /* 본문 탭 좌측 목차 */
   .rail { border-right: 1px solid var(--line); background: var(--bg-sink); overflow-y: auto; min-height: 0; }
   .rail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 12px 0 20px; }
-  .rail-title { font-size: 11px; font-weight: 650; letter-spacing: .06em; color: var(--ink-faint); }
-  #btn-toc {
+  /* 정렬 — 최근 생성순(기본) · 과거 생성순. 고른 쪽이 진하게 보인다 */
+  .rail-sort { display: flex; gap: 2px; }
+  .rail-sort button {
+    font: inherit; font-size: 11px; font-weight: 650; letter-spacing: .02em; cursor: pointer;
+    padding: 3px 6px; background: transparent; color: var(--ink-faint);
+    border: 0; border-radius: 5px;
+  }
+  .rail-sort button:hover { color: var(--ink); }
+  .rail-sort button[aria-pressed="true"] { color: var(--ink); background: var(--bg-raise); }
+  .btn-toc {
     font: inherit; font-size: 13px; line-height: 1; cursor: pointer;
     width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
     background: transparent; color: var(--ink-faint);
     border: 1px solid var(--line); border-radius: 7px;
   }
-  #btn-toc:hover { color: var(--ink); border-color: var(--ink-faint); background: var(--bg-raise); }
+  .btn-toc:hover { color: var(--ink); border-color: var(--ink-faint); background: var(--bg-raise); }
   body.toc-collapsed .rail { overflow: hidden; }
   body.toc-collapsed .rail-head { padding: 14px 0 0; justify-content: center; }
-  body.toc-collapsed .rail-title, body.toc-collapsed nav#toc { display: none; }
-  /* 목차도 본문처럼 최신이 맨 위 — 링크는 생성 순으로 만들고(번호·스크롤 스파이 기준) 화면에서만 뒤집는다 */
-  nav#toc { padding: 10px 12px 28px; display: flex; flex-direction: column-reverse; justify-content: flex-end; }
-  nav#toc a {
+  body.toc-collapsed .rail-sort, body.toc-collapsed nav.toc { display: none; }
+  /* 목차도 본문처럼 기본은 최신이 맨 위 — 링크는 생성 순으로 만들고(번호·스크롤 스파이 기준) 화면에서만 뒤집는다 */
+  nav.toc { padding: 10px 12px 28px; display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+  body.sort-asc nav.toc { flex-direction: column; justify-content: flex-start; }
+  nav.toc a {
     display: flex; gap: 8px; align-items: baseline;
     padding: 6px 8px; border-radius: 7px;
     color: var(--ink-dim); text-decoration: none; font-size: 13px; line-height: 1.5;
   }
-  nav#toc a:hover { background: var(--bg-raise); color: var(--ink); }
-  nav#toc a.active { background: var(--bg-raise); color: var(--ink); }
-  nav#toc a .num { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); min-width: 1.4em; }
-  nav#toc a.fresh .txt::after {
+  nav.toc a:hover { background: var(--bg-raise); color: var(--ink); }
+  nav.toc a.active { background: var(--bg-raise); color: var(--ink); }
+  nav.toc a .num { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); min-width: 1.4em; }
+  nav.toc a.fresh .txt::after {
     content: "NEW"; margin-left: 6px; font-family: var(--mono); font-size: 9px;
     color: var(--accent-ink); background: var(--accent); padding: 1px 4px; border-radius: 3px; vertical-align: 1px;
   }
-  nav#toc .toc-empty { padding: 6px 8px; font-size: 12.5px; color: var(--ink-faint); }
+  nav.toc .toc-empty { padding: 6px 8px; font-size: 12.5px; color: var(--ink-faint); }
 
   /* ---------- main ---------- */
   main { overflow-y: auto; min-height: 0; scroll-behavior: smooth; }
   .wrap { max-width: 860px; margin: 0 auto; padding: 30px 40px 120px; }
-  /* 본문 탭은 목차 옆 남은 가로폭을 다 쓴다 — 한 눈에 보기·할 일 목록은 읽기 폭 860px 유지 */
-  .pane[data-pane="body"] .wrap { max-width: none; }
-  /* 본문 카드는 최신이 맨 위 — 문서 순서(=목차 번호)는 생성 순 그대로 두고 화면에서만 뒤집는다 */
-  #content { display: flex; flex-direction: column-reverse; }
-
-  /* ---------- status board ---------- */
-  .status { display: flex; flex-direction: column; gap: 10px; }
-  .status.is-empty { display: none; }
-  .cell {
-    background: var(--bg-raise); border: 1px solid var(--line-soft);
-    border-radius: var(--radius); padding: 16px 18px 18px;
-  }
-  .cell.is-empty { display: none; }
-  /* '지금 · 다음에 할 일' 과 '정해진 것 · 열린 질문' 두 묶음 사이를 벌린다 (gap 10px + 20px = 30px) */
-  .cell[data-kind="done"] { margin-top: 20px; }
-  .cell h3 {
-    margin: 0 0 12px; font-size: 20px; line-height: 1.35; letter-spacing: -.015em;
-    color: var(--ink); font-weight: 680;
-  }
-  .cell ul { margin: 0; padding-left: 18px; }
-  .cell li { font-size: 15.5px; line-height: 1.85; margin: 4px 0; }
-  .cell p { margin: 0; font-size: 15.5px; line-height: 1.85; }
+  /* 본문 탭은 목차 옆 남은 가로폭을 다 쓴다 — 할 일 목록은 읽기 폭 860px 유지 */
+  .pane.has-rail .wrap { max-width: none; }
+  /* 본문 카드는 기본이 최신 맨 위 — 문서 순서(=목차 번호)는 생성 순 그대로 두고 화면에서만 뒤집는다. 과거 생성순이면 문서 순서 그대로 */
+  #content, #outputs, #hl-content { display: flex; flex-direction: column-reverse; }
+  body.sort-asc #content, body.sort-asc #outputs, body.sort-asc #hl-content { flex-direction: column; }
+  /* 산출물 탭은 첫 산출물이 생길 때 나타난다 */
+  .tabs .tab[hidden] { display: none; }
 
   /* ---------- sections ---------- */
   section.card {
@@ -343,11 +338,11 @@
 
   /* mobile */
   @media (max-width: 860px) {
-    .pane[data-pane="body"].is-active { grid-template-columns: 1fr; }
+    .pane.has-rail.is-active { grid-template-columns: 1fr; }
     .rail { border-right: none; border-bottom: 1px solid var(--line); max-height: 180px; }
-    body.toc-collapsed .pane[data-pane="body"].is-active { grid-template-columns: 1fr; }
+    body.toc-collapsed .pane.has-rail.is-active { grid-template-columns: 1fr; }
     body.toc-collapsed .rail-head { padding: 8px 16px; justify-content: space-between; }
-    body.toc-collapsed .rail-title { display: block; }
+    body.toc-collapsed .rail-sort { display: flex; }
     .topbar-row { padding: 14px 16px 10px; }
     .tabs { padding: 0 10px; overflow-x: auto; }
     .tabs .tab { padding: 9px 10px 10px; white-space: nowrap; }
@@ -376,51 +371,52 @@
   }
   body.hl-off #btn-hl::before { background: var(--line); }
 
+  /* 형광펜 모아보기 — 본문과 같은 카드·목차, 카드 안에는 칠한 글만 목록으로 */
+  ul.hl-list { margin: 0; padding-left: 20px; }
+  ul.hl-list li { margin: 7px 0; cursor: pointer; border-radius: 4px; }
+  ul.hl-list li::marker { color: #e8c800; }
+  ul.hl-list li:hover { color: var(--ink); background: color-mix(in oklab, #fff35c 14%, transparent); }
+  ul.hl-list li.stale { color: var(--ink-faint); cursor: default; }
+  ul.hl-list li.stale:hover { background: none; }
+  ul.hl-list li.stale::after { content: " · 본문에서 바뀜"; font-size: 12px; }
+  x-hl.pulse { outline: 2px solid #ffb800; outline-offset: 1px; }
+
+  /* 산출물 — 카드 우측 상단의 내보내기 버튼과 형식 메뉴 */
+  section.card.out { position: relative; }
+  section.card.out > h2 { padding-right: 104px; }
+  .out-actions { position: absolute; top: 20px; right: 22px; }
+  .out-export {
+    font: inherit; font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px;
+    background: transparent; color: var(--ink-dim);
+    border: 1px solid var(--line); border-radius: 999px;
+  }
+  .out-export:hover, .out-export[aria-expanded="true"] { color: var(--ink); border-color: var(--ink-faint); background: var(--bg-sink); }
+  .out-export svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #out-menu {
+    position: fixed; z-index: 60; display: none; min-width: 220px; padding: 6px;
+    background: var(--bg-raise); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.28);
+  }
+  #out-menu.show { display: block; }
+  #out-menu button {
+    font: inherit; font-size: 13px; line-height: 1.4; cursor: pointer; width: 100%; text-align: left;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+    padding: 7px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink);
+  }
+  #out-menu button:hover, #out-menu button:focus-visible { background: var(--bg-sink); outline: none; }
+  #out-menu .ext { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+  @media (max-width: 860px) {
+    section.card.out > h2 { padding-right: 0; padding-top: 38px; }
+    .out-actions { top: 16px; right: 16px; }
+  }
+
   /* 상단 아이콘 버튼 — 테마 전환 */
   .rail-actions .icon-btn {
     width: 27px; height: 27px; padding: 0;
     display: inline-flex; align-items: center; justify-content: center;
   }
   .icon-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-
-  /* 한 눈에 보기 버튼 — 서랍을 여닫는다. 닫혀 있는 동안 내용이 바뀌면 점이 붙는다 */
-  .rail-actions #btn-glance { display: inline-flex; align-items: center; gap: 6px; }
-  #btn-glance .tab-mark:not([data-changed]) { display: none; }
-  .rail-actions #btn-glance[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); }
-
-  /* 한 눈에 보기 서랍 — 우측에서 나온다. 폭은 화면의 35% 가 기본, 왼쪽 가장자리를 끌어 조절 */
-  :root { --drawer-w: 35vw; }
-  .drawer {
-    position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
-    width: var(--drawer-w); min-width: 300px; max-width: 92vw;
-    display: flex; flex-direction: column;
-    background: var(--bg); border-left: 1px solid var(--line);
-    box-shadow: -14px 0 36px rgba(0,0,0,.22);
-    transform: translateX(100%); visibility: hidden;
-    transition: transform .22s ease, visibility 0s linear .22s;
-  }
-  body.glance-open .drawer { transform: none; visibility: visible; transition: transform .22s ease; }
-  .drawer-head {
-    flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 16px 16px 14px 22px; background: var(--bg-sink); border-bottom: 1px solid var(--line);
-  }
-  .drawer-head h2 { margin: 0; font-size: 15px; font-weight: 680; letter-spacing: -.01em; }
-  #btn-drawer-close {
-    font: inherit; font-size: 16px; line-height: 1; cursor: pointer;
-    width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; color: var(--ink-faint);
-    border: 1px solid var(--line); border-radius: 7px;
-  }
-  #btn-drawer-close:hover { color: var(--ink); border-color: var(--ink-faint); background: var(--bg-raise); }
-  .drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px 48px; }
-  .drawer-resizer { position: absolute; top: 0; bottom: 0; left: -5px; width: 10px; cursor: col-resize; z-index: 1; touch-action: none; }
-  .drawer-resizer::after {
-    content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 2px;
-    background: transparent; transition: background .15s;
-  }
-  .drawer-resizer:hover::after, body.drawer-resizing .drawer-resizer::after { background: var(--accent); }
-  body.drawer-resizing { cursor: col-resize; user-select: none; -webkit-user-select: none; }
-  body.drawer-resizing .drawer { transition: none; }
 
   /* 맨 위로 — 우측 하단 떠 있는 버튼. 조금이라도 내려 읽을 때만 나타난다 */
   #btn-top {
@@ -436,11 +432,6 @@
   #btn-top:hover { border-color: var(--ink-faint); }
   #btn-top svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  @media (max-width: 860px) {
-    .drawer { width: 100vw; max-width: 100vw; min-width: 0; }
-    .drawer-resizer { display: none; }
-    .drawer-body { padding: 16px 16px 40px; }
-  }
 </style>
 </head>
 <body>
@@ -457,7 +448,6 @@
         <div class="rail-actions">
           <button id="btn-hl" type="button">형광펜</button>
           <button id="btn-pause" type="button">일시정지</button>
-          <button id="btn-glance" type="button" aria-pressed="false" aria-controls="drawer">한 눈에 보기<span class="tab-mark"></span></button>
           <button id="btn-theme" class="icon-btn" type="button"></button>
         </div>
       </div>
@@ -465,6 +455,8 @@
     <nav class="tabs" id="tabs">
       <button class="tab" type="button" data-pane="todo">할 일 목록<span class="tab-mark"></span></button>
       <button class="tab is-active" type="button" data-pane="body">본문<span class="tab-mark"></span></button>
+      <button class="tab" type="button" data-pane="out" hidden>산출물<span class="tab-mark"></span></button>
+      <button class="tab" type="button" data-pane="hl">형광펜 모아보기<span class="tab-mark"></span></button>
     </nav>
   </header>
 
@@ -487,13 +479,13 @@
     </section>
 
     <!-- 탭 2 — 본문 -->
-    <section class="pane is-active" data-pane="body">
+    <section class="pane has-rail is-active" data-pane="body">
       <aside class="rail">
         <div class="rail-head">
-          <span class="rail-title">최근 생성순</span>
-          <button id="btn-toc" type="button" title="목차 접기" aria-label="목차 접기" aria-expanded="true">«</button>
+          <div class="rail-sort" role="group" aria-label="정렬"><button type="button" data-sort="desc">최근 생성순</button><button type="button" data-sort="asc">과거 생성순</button></div>
+          <button class="btn-toc" type="button" title="목차 접기" aria-label="목차 접기" aria-expanded="true">«</button>
         </div>
-        <nav id="toc"></nav>
+        <nav class="toc" id="toc"></nav>
       </aside>
       <main id="main">
         <div class="wrap">
@@ -504,52 +496,44 @@
       </main>
     </section>
 
+    <!-- 탭 3 — 산출물 (사용자가 산출물로 정리해 달라고 할 때 채운다. 첫 산출물이 생기면 탭이 나타난다) -->
+    <section class="pane has-rail" data-pane="out">
+      <aside class="rail">
+        <div class="rail-head">
+          <div class="rail-sort" role="group" aria-label="정렬"><button type="button" data-sort="desc">최근 생성순</button><button type="button" data-sort="asc">과거 생성순</button></div>
+          <button class="btn-toc" type="button" title="목차 접기" aria-label="목차 접기" aria-expanded="true">«</button>
+        </div>
+        <nav class="toc" id="out-toc"></nav>
+      </aside>
+      <main id="out-main">
+        <div class="wrap">
+          <div id="outputs">
+<!-- OUTPUTS_INSERT -->
+          </div>
+          <p class="pane-empty" id="out-empty" hidden>아직 산출물이 없습니다.</p>
+        </div>
+      </main>
+    </section>
+
+    <!-- 탭 4 — 형광펜 모아보기 (브라우저가 그린다. Claude 는 편집하지 않는다) -->
+    <section class="pane has-rail" data-pane="hl">
+      <aside class="rail">
+        <div class="rail-head">
+          <div class="rail-sort" role="group" aria-label="정렬"><button type="button" data-sort="desc">최근 생성순</button><button type="button" data-sort="asc">과거 생성순</button></div>
+          <button class="btn-toc" type="button" title="목차 접기" aria-label="목차 접기" aria-expanded="true">«</button>
+        </div>
+        <nav class="toc" id="hl-toc"></nav>
+      </aside>
+      <main id="hl-main">
+        <div class="wrap">
+          <div id="hl-content"></div>
+          <p class="pane-empty" id="hl-empty" hidden>화면 오른쪽 위 형광펜 버튼을 누르고 기억해두고 싶은 문장을 드래그해 주세요.</p>
+        </div>
+      </main>
+    </section>
+
   </div>
 </div>
-
-<!-- 한 눈에 보기 — 상단 버튼으로 여는 우측 서랍 -->
-<aside class="drawer" id="drawer" aria-label="한 눈에 보기" aria-hidden="true">
-  <div class="drawer-resizer" id="drawer-resizer" title="끌어서 폭 조절 · 두 번 눌러 기본 폭"></div>
-  <div class="drawer-head">
-    <h2>한 눈에 보기</h2>
-    <button id="btn-drawer-close" type="button" title="닫기" aria-label="닫기">×</button>
-  </div>
-  <div class="drawer-body">
-    <div class="status" id="status">
-<!-- STATUS -->
-      <div class="cell" data-kind="now">
-        <h3>지금 하는 일</h3>
-        <div class="cell-body">
-<!-- ST:now -->
-<!-- /ST:now -->
-        </div>
-      </div>
-      <div class="cell" data-kind="next">
-        <h3>다음에 할 일</h3>
-        <div class="cell-body">
-<!-- ST:next -->
-<!-- /ST:next -->
-        </div>
-      </div>
-      <div class="cell" data-kind="done">
-        <h3>정해진 것</h3>
-        <div class="cell-body">
-<!-- ST:done -->
-<!-- /ST:done -->
-        </div>
-      </div>
-      <div class="cell" data-kind="ask">
-        <h3>열린 질문</h3>
-        <div class="cell-body">
-<!-- ST:ask -->
-<!-- /ST:ask -->
-        </div>
-      </div>
-<!-- /STATUS -->
-    </div>
-    <p class="pane-empty" id="glance-empty" hidden>아직 적어 둔 것이 없습니다.</p>
-  </div>
-</aside>
 
 <button id="btn-top" type="button" title="맨 위로" aria-label="맨 위로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></button>
 <button id="toast" type="button">갱신됨</button>
@@ -580,26 +564,54 @@
 
   // 접힘 상태는 캔버스마다가 아니라 브라우저 전체에 걸쳐 기억한다 — 한 번 접으면 다음 캔버스도 접힌 채로 연다.
   var TOC_KEY = "talk-on-canvas:toc-collapsed";
-  var btnToc = document.getElementById("btn-toc");
+  var btnTocs = document.querySelectorAll(".btn-toc");
   function readTocPref() { try { return localStorage.getItem(TOC_KEY) === "1"; } catch (e) { return false; } }
   function renderToc(collapsed) {
     document.body.classList.toggle("toc-collapsed", collapsed);
-    btnToc.textContent = collapsed ? "»" : "«";
     var label = collapsed ? "목차 펼치기" : "목차 접기";
-    btnToc.title = label;
-    btnToc.setAttribute("aria-label", label);
-    btnToc.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    Array.prototype.forEach.call(btnTocs, function (b) {
+      b.textContent = collapsed ? "»" : "«";
+      b.title = label;
+      b.setAttribute("aria-label", label);
+      b.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    });
   }
-  btnToc.addEventListener("click", function () {
-    var next = !document.body.classList.contains("toc-collapsed");
-    try { localStorage.setItem(TOC_KEY, next ? "1" : "0"); } catch (e) {}
-    renderToc(next);
+  Array.prototype.forEach.call(btnTocs, function (b) {
+    b.addEventListener("click", function () {
+      var next = !document.body.classList.contains("toc-collapsed");
+      try { localStorage.setItem(TOC_KEY, next ? "1" : "0"); } catch (e) {}
+      renderToc(next);
+    });
   });
   renderToc(readTocPref());
 
+  /* ---------- 목차 · 카드 정렬 ---------- */
+
+  // 기본은 최근 생성순. 고른 순서는 캔버스마다가 아니라 브라우저 전체에 걸쳐 기억하고, 목차가 있는 탭 전부에 함께 적용한다.
+  var SORT_KEY = "talk-on-canvas:sort";
+  var sortAsc = (function () { try { return localStorage.getItem(SORT_KEY) === "asc"; } catch (e) { return false; } })();
+  var btnSorts = document.querySelectorAll(".rail-sort button");
+  function renderSort() {
+    document.body.classList.toggle("sort-asc", sortAsc);
+    Array.prototype.forEach.call(btnSorts, function (b) {
+      b.setAttribute("aria-pressed", (b.dataset.sort === "asc") === sortAsc ? "true" : "false");
+    });
+  }
+  Array.prototype.forEach.call(btnSorts, function (b) {
+    b.addEventListener("click", function () {
+      sortAsc = b.dataset.sort === "asc";
+      try { localStorage.setItem(SORT_KEY, sortAsc ? "asc" : "desc"); } catch (e) {}
+      renderSort();
+      // 순서가 뒤집히면 보던 자리의 의미가 없어지므로 맨 위에서 다시 읽게 한다
+      Object.keys(RAILS).forEach(function (k) { RAILS[k].main.scrollTo({ top: 0, behavior: "instant" }); });
+      spy();
+    });
+  });
+  renderSort();
+
   /* ---------- 탭 ---------- */
 
-  var PANES = ["todo", "body"];
+  var PANES = ["todo", "body", "out", "hl"];
   var tabs = {}, panes = {}, marks = {};
   PANES.forEach(function (k) {
     tabs[k] = document.querySelector('.tabs .tab[data-pane="' + k + '"]');
@@ -607,12 +619,8 @@
     marks[k] = tabs[k].querySelector(".tab-mark");
   });
 
-  // 한 눈에 보기는 탭이 아니라 서랍이다 — 변화 표시는 탭과 같은 방식으로 상단 버튼에 붙인다
-  var btnGlance = document.getElementById("btn-glance");
-  marks.glance = btnGlance.querySelector(".tab-mark");
-  var glanceOpen = sessionStorage.getItem(SKEY + ":glance") === "1";
-  var WATCHED = PANES.concat("glance");
-  function inView(k) { return k === "glance" ? glanceOpen : k === active; }
+  // 형광펜 모아보기는 사용자가 칠한 것만 담으므로 '바뀜' 감시에서 뺀다
+  var WATCHED = ["todo", "body", "out"];
 
   var active = sessionStorage.getItem(SKEY + ":tab");
   if (PANES.indexOf(active) < 0) active = "body";
@@ -620,7 +628,7 @@
   // 숨은 탭이 바뀐 것을 놓치지 않도록, 탭별 내용 지문을 들고 비교한다.
   var sig = {};
   function paneSig(k) {
-    var id = k === "glance" ? "status" : k === "todo" ? "todo" : "content";
+    var id = k === "todo" ? "todo" : k === "out" ? "outputs" : "content";
     // 형광펜은 사용자가 칠한 것이라 '바뀜' 신호에서 뺀다
     return document.getElementById(id).innerHTML.replace(/<\/?x-hl[^>]*>/g, "");
   }
@@ -632,10 +640,10 @@
       tabs[n].classList.toggle("is-active", n === k);
       panes[n].classList.toggle("is-active", n === k);
     });
-    sig[k] = paneSig(k);
-    marks[k].removeAttribute("data-changed");
+    if (k !== "hl") { sig[k] = paneSig(k); marks[k].removeAttribute("data-changed"); }
     renderMarks();
-    if (k === "body") spy();
+    if (k === "hl") renderHlView();
+    spy();
     renderTop();
   }
   PANES.forEach(function (k) {
@@ -651,10 +659,22 @@
     } else if (!items.length) {
       marks.todo.textContent = "";
     }
+    // 형광펜 모아보기 탭은 칠한 곳 개수
+    marks.hl.textContent = typeof hls !== "undefined" && hls.length ? String(hls.length) : "";
   }
 
+  var hlMain = document.getElementById("hl-main");
+  var hlToc = document.getElementById("hl-toc");
+  var outMain = document.getElementById("out-main");
+  var outToc = document.getElementById("out-toc");
+  // 좌측 목차가 있는 탭 — 카드 묶음 · 목차 · 스크롤 영역
+  var RAILS = {
+    body: { cards: "#content section.card", toc: toc, main: main },
+    out: { cards: "#outputs section.card", toc: outToc, main: outMain },
+    hl: { cards: "#hl-content section.card", toc: hlToc, main: hlMain }
+  };
   function scroller() {
-    return active === "body" ? main : panes[active].querySelector(".pane-scroll");
+    return RAILS[active] ? RAILS[active].main : panes[active].querySelector(".pane-scroll");
   }
 
   /* ---------- 렌더 보강 ---------- */
@@ -674,17 +694,7 @@
 
     // 갱신으로 새로 들어온 내용에 형광펜을 다시 칠한다
     paintAll();
-
-    // 한 눈에 보기 — 비어 있는 칸은 숨긴다
-    var shown = 0;
-    Array.prototype.forEach.call(document.querySelectorAll("#status .cell"), function (cell) {
-      var body = cell.querySelector(".cell-body");
-      var empty = !body || body.textContent.trim() === "";
-      cell.classList.toggle("is-empty", empty);
-      if (!empty) shown++;
-    });
-    document.getElementById("status").classList.toggle("is-empty", shown === 0);
-    document.getElementById("glance-empty").hidden = shown > 0;
+    renderHlView();
 
     // 할 일 목록 — 항목 수와 완료 개수
     var todoSec = document.getElementById("sec-todo");
@@ -699,14 +709,40 @@
       todoSec.classList.toggle("fresh", todoSec.dataset.rev === rev);
     }
 
-    // 목차 재생성 + 최신 rev 섹션 강조 (본문 탭 전용)
-    var secs = document.querySelectorAll("#content section.card");
-    toc.innerHTML = "";
+    // 목차 재생성 + 최신 rev 섹션 강조 (본문 · 산출물 탭)
+    var secs = buildToc(toc, document.querySelectorAll("#content section.card"), rev, "아직 섹션이 없습니다.");
+    tabs.body.toggleAttribute("data-empty", secs.length === 0);
+
+    // 산출물 — 첫 산출물이 생기면 탭이 나타나고, 카드마다 내보내기 버튼을 단다
+    var outs = buildToc(outToc, document.querySelectorAll("#outputs section.card"), rev, "아직 산출물이 없습니다.");
+    Array.prototype.forEach.call(outs, function (sec) {
+      sec.classList.add("out");
+      if (!sec.querySelector(":scope > .out-actions")) sec.insertBefore(exportButton(), sec.firstChild);
+    });
+    tabs.out.hidden = outs.length === 0;
+    document.getElementById("out-empty").hidden = outs.length > 0;
+    if (!outs.length && active === "out") showTab("body");
+
+    // 숨은 탭의 변화 표시
+    WATCHED.forEach(function (k) {
+      var cur = paneSig(k);
+      if (sig[k] === undefined || k === active) { sig[k] = cur; marks[k].removeAttribute("data-changed"); return; }
+      if (cur !== sig[k]) marks[k].setAttribute("data-changed", "");
+    });
+    renderMarks();
+
+    revLabel.textContent = rev;
+    spy();
+  }
+
+  // 카드 묶음의 목차를 다시 그린다. 링크는 생성 순으로 만들고 화면에서만 뒤집는다(CSS)
+  function buildToc(nav, secs, rev, emptyMsg) {
+    nav.innerHTML = "";
     if (!secs.length) {
       var e = document.createElement("p");
       e.className = "toc-empty";
-      e.textContent = "아직 섹션이 없습니다.";
-      toc.appendChild(e);
+      e.textContent = emptyMsg;
+      nav.appendChild(e);
     }
     Array.prototype.forEach.call(secs, function (sec, i) {
       var fresh = sec.dataset.rev === rev;
@@ -721,33 +757,23 @@
         ev.preventDefault();
         sec.scrollIntoView({ behavior: "smooth", block: "start" });
       });
-      toc.appendChild(a);
+      nav.appendChild(a);
     });
-    tabs.body.toggleAttribute("data-empty", secs.length === 0);
-
-    // 숨은 탭·닫힌 서랍의 변화 표시
-    WATCHED.forEach(function (k) {
-      var cur = paneSig(k);
-      if (sig[k] === undefined || inView(k)) { sig[k] = cur; marks[k].removeAttribute("data-changed"); return; }
-      if (cur !== sig[k]) marks[k].setAttribute("data-changed", "");
-    });
-    renderMarks();
-
-    revLabel.textContent = rev;
-    spy();
+    return secs;
   }
 
   /* ---------- 스크롤 스파이 ---------- */
 
   function spy() {
-    if (active !== "body") return;
-    var secs = Array.prototype.slice.call(document.querySelectorAll("#content section.card"));
-    var links = toc.querySelectorAll("a");
+    var rail = RAILS[active];
+    if (!rail) return;
+    var secs = Array.prototype.slice.call(document.querySelectorAll(rail.cards));
+    var links = rail.toc.querySelectorAll("a");
     if (!secs.length) return;
-    var box = main.getBoundingClientRect().top;
-    // 화면에서는 역순으로 쌓이므로, 기준선(80px)을 지난 카드 중 가장 아래 것이 지금 읽는 카드다.
-    // 아무것도 안 지났으면 화면 맨 위 카드(=가장 최근 섹션).
-    var idx = secs.length - 1, best = -Infinity;
+    var box = rail.main.getBoundingClientRect().top;
+    // 기준선(80px)을 지난 카드 중 가장 아래 것이 지금 읽는 카드다.
+    // 아무것도 안 지났으면 화면 맨 위 카드.
+    var idx = sortAsc ? 0 : secs.length - 1, best = -Infinity;
     secs.forEach(function (s, i) {
       var t = s.getBoundingClientRect().top - box;
       if (t < 80 && t > best) { best = t; idx = i; }
@@ -757,6 +783,8 @@
     });
   }
   main.addEventListener("scroll", spy, { passive: true });
+  outMain.addEventListener("scroll", spy, { passive: true });
+  hlMain.addEventListener("scroll", spy, { passive: true });
   window.addEventListener("scroll", spy, { passive: true });
 
   /* ---------- 토스트 ---------- */
@@ -782,14 +810,14 @@
   // 토스트를 누르면 이번에 갱신된 곳으로 간다 — 다른 탭에서 바뀌었으면 그 탭으로 옮겨 준다.
   toast.addEventListener("click", function () {
     var fs = document.querySelectorAll("#content section.card.fresh");
-    var f = fs[fs.length - 1];  // 화면상 가장 위에 있는 갱신 카드
+    var fo = document.querySelectorAll("#outputs section.card.fresh");
+    var f = fs[sortAsc ? 0 : fs.length - 1] || fo[sortAsc ? 0 : fo.length - 1];  // 화면상 가장 위에 있는 갱신 카드 — 본문 먼저
     if (f) {
-      showTab("body");
+      showTab(fs.length ? "body" : "out");
       f.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       var changed = WATCHED.filter(function (k) { return marks[k].hasAttribute("data-changed"); });
-      if (changed[0] === "glance") setGlance(true);
-      else if (changed.length) showTab(changed[0]);
+      if (changed.length) showTab(changed[0]);
     }
     toast.classList.remove("show");
   });
@@ -845,59 +873,6 @@
   if (mqLight.addEventListener) mqLight.addEventListener("change", renderTheme);
   renderTheme();
 
-  /* ---------- 한 눈에 보기 서랍 ---------- */
-
-  // 열림 여부는 캔버스(탭)마다, 폭은 브라우저 전체에 걸쳐 기억한다. 폭은 vw 로 저장해 창 크기를 따라 늘고 준다.
-  var DW_KEY = "talk-on-canvas:drawer-w";
-  var DW_DEFAULT = 35, DW_MIN = 20, DW_MAX = 92;
-  var drawer = document.getElementById("drawer");
-  var resizer = document.getElementById("drawer-resizer");
-  function setDrawerW(vw) { root.style.setProperty("--drawer-w", vw + "vw"); }
-  (function () { try { var w = parseFloat(localStorage.getItem(DW_KEY)); if (w >= DW_MIN && w <= DW_MAX) setDrawerW(w); } catch (e) {} })();
-
-  function renderGlance() {
-    document.body.classList.toggle("glance-open", glanceOpen);
-    btnGlance.setAttribute("aria-pressed", glanceOpen ? "true" : "false");
-    drawer.setAttribute("aria-hidden", glanceOpen ? "false" : "true");
-    if (glanceOpen) { sig.glance = paneSig("glance"); marks.glance.removeAttribute("data-changed"); }
-  }
-  function setGlance(open) {
-    glanceOpen = open;
-    sessionStorage.setItem(SKEY + ":glance", open ? "1" : "0");
-    renderGlance();
-  }
-  btnGlance.addEventListener("click", function () { setGlance(!glanceOpen); });
-  document.getElementById("btn-drawer-close").addEventListener("click", function () { setGlance(false); });
-  document.addEventListener("keydown", function (ev) {
-    if (ev.key === "Escape" && glanceOpen && !pop.classList.contains("show")) setGlance(false);
-  });
-  renderGlance();
-
-  // 왼쪽 가장자리를 끌어 폭을 바꾼다. 두 번 누르면 기본 폭(35%)으로 돌아간다.
-  resizer.addEventListener("pointerdown", function (ev) {
-    if (ev.button !== 0) return;
-    ev.preventDefault();
-    resizer.setPointerCapture(ev.pointerId);
-    document.body.classList.add("drawer-resizing");
-  });
-  resizer.addEventListener("pointermove", function (ev) {
-    if (!document.body.classList.contains("drawer-resizing")) return;
-    var vw = (window.innerWidth - ev.clientX) / window.innerWidth * 100;
-    setDrawerW(Math.round(Math.min(DW_MAX, Math.max(DW_MIN, vw)) * 10) / 10);
-  });
-  function endResize(ev) {
-    if (!document.body.classList.contains("drawer-resizing")) return;
-    document.body.classList.remove("drawer-resizing");
-    if (resizer.hasPointerCapture(ev.pointerId)) resizer.releasePointerCapture(ev.pointerId);
-    try { localStorage.setItem(DW_KEY, parseFloat(root.style.getPropertyValue("--drawer-w"))); } catch (e) {}
-  }
-  resizer.addEventListener("pointerup", endResize);
-  resizer.addEventListener("pointercancel", endResize);
-  resizer.addEventListener("dblclick", function () {
-    root.style.removeProperty("--drawer-w");
-    try { localStorage.removeItem(DW_KEY); } catch (e) {}
-  });
-
   /* ---------- 맨 위로 (떠 있는 버튼) ---------- */
 
   var btnTop = document.getElementById("btn-top");
@@ -912,6 +887,8 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
   main.addEventListener("scroll", renderTop, { passive: true });
+  outMain.addEventListener("scroll", renderTop, { passive: true });
+  hlMain.addEventListener("scroll", renderTop, { passive: true });
   Array.prototype.forEach.call(document.querySelectorAll(".pane-scroll"), function (el) {
     el.addEventListener("scroll", renderTop, { passive: true });
   });
@@ -926,7 +903,7 @@
   // 켜고 끈 상태는 캔버스마다 따로 기억한다. 새 캔버스는 꺼진 채로 열려, 드래그가 평범한 선택·복사가 된다
   var HL_ON_KEY = SKEY + ":hl-on";
   var HL_CTX = 32;
-  var SCOPES = "#content section.card[id], #todo section.card[id], #status .cell[data-kind]";
+  var SCOPES = "#content section.card[id], #todo section.card[id]";
   var btnHl = document.getElementById("btn-hl");
   var hlOn = (function () { try { return localStorage.getItem(HL_ON_KEY) === "1"; } catch (e) { return false; } })();
   var hls = (function () { try { return JSON.parse(localStorage.getItem(HL_KEY) || "[]"); } catch (e) { return []; } })();
@@ -945,12 +922,8 @@
   });
   renderHlBtn();
 
-  function scopeKey(el) { return el.id ? "#" + el.id : "cell:" + el.dataset.kind; }
-  function findScope(key) {
-    return key.indexOf("cell:") === 0
-      ? document.querySelector('#status .cell[data-kind="' + key.slice(5) + '"]')
-      : document.getElementById(key.slice(1));
-  }
+  function scopeKey(el) { return "#" + el.id; }
+  function findScope(key) { return document.getElementById(key.slice(1)); }
   function elOf(node) { return node.nodeType === 1 ? node : node.parentElement; }
   function textOffset(scope, node, off) {
     var r = document.createRange();
@@ -1010,6 +983,87 @@
     });
   }
 
+  /* ---------- 형광펜 모아보기 ---------- */
+
+  // 본문 섹션 중 칠한 곳이 있는 것만, 본문과 같은 순서·번호·제목의 카드로 그린다. 카드 안은 칠한 글 목록.
+  // 목록은 본문에 지금 칠해진 순서를 따르고, 문장이 고쳐져 못 찾은 것은 흐리게 남긴다. 누르면 본문의 그 자리로 간다.
+  function renderHlView() {
+    var hc = document.getElementById("hl-content");
+    hc.innerHTML = "";
+    hlToc.innerHTML = "";
+    var secs = document.querySelectorAll("#content section.card[id]");
+    var shown = 0;
+    Array.prototype.forEach.call(secs, function (sec, i) {
+      var mine = hls.filter(function (h) { return h.scope === "#" + sec.id; });
+      if (!mine.length) return;
+      var order = [];
+      Array.prototype.forEach.call(sec.querySelectorAll("x-hl[data-hl]"), function (m) {
+        if (order.indexOf(m.dataset.hl) < 0) order.push(m.dataset.hl);
+      });
+      mine.sort(function (a, b) {
+        var ia = order.indexOf(a.id), ib = order.indexOf(b.id);
+        if (ia < 0 && ib < 0) return a.at - b.at;
+        if (ia < 0) return 1;
+        if (ib < 0) return -1;
+        return ia - ib;
+      });
+      var h2 = sec.querySelector("h2");
+      var title = h2 ? h2.textContent.trim() : sec.id;
+      var card = document.createElement("section");
+      card.className = "card";
+      card.id = "hlv-" + sec.id;
+      card.innerHTML = "<h2></h2><ul class=\"hl-list\"></ul>";
+      card.querySelector("h2").textContent = title;
+      var ul = card.querySelector("ul");
+      mine.forEach(function (h) {
+        var ms = sec.querySelectorAll('x-hl[data-hl="' + h.id + '"]');
+        var li = document.createElement("li");
+        if (ms.length) {
+          li.textContent = Array.prototype.map.call(ms, function (m) { return m.textContent; }).join(" ").replace(/\s+/g, " ").trim();
+          li.title = "본문에서 보기";
+          li.addEventListener("click", function () { jumpToHl(h.id); });
+        } else {
+          li.textContent = h.quote.replace(/\s+/g, " ").trim();
+          li.className = "stale";
+        }
+        ul.appendChild(li);
+      });
+      hc.appendChild(card);
+      var a = document.createElement("a");
+      a.href = "#" + card.id;
+      a.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="txt"></span>';
+      a.querySelector(".txt").textContent = title;
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      hlToc.appendChild(a);
+      shown++;
+    });
+    if (!shown) {
+      var e = document.createElement("p");
+      e.className = "toc-empty";
+      e.textContent = "아직 칠한 곳이 없습니다.";
+      hlToc.appendChild(e);
+    }
+    document.getElementById("hl-empty").hidden = shown > 0;
+    tabs.hl.toggleAttribute("data-empty", shown === 0);
+    renderMarks();
+    spy();
+  }
+
+  function jumpToHl(id) {
+    var m = document.querySelector('#content x-hl[data-hl="' + id + '"]');
+    if (!m) return;
+    showTab("body");
+    m.scrollIntoView({ behavior: "smooth", block: "center" });
+    var ms = document.querySelectorAll('#content x-hl[data-hl="' + id + '"]');
+    Array.prototype.forEach.call(ms, function (x) { x.classList.add("pulse"); });
+    setTimeout(function () {
+      Array.prototype.forEach.call(ms, function (x) { x.classList.remove("pulse"); });
+    }, 1600);
+  }
+
   var justPainted = false;
   function onSelect() {
     if (!hlOn) return;
@@ -1035,6 +1089,7 @@
     saveHls();
     sel.removeAllRanges();
     paint(sa, h);
+    renderHlView();
     justPainted = true;
     setTimeout(function () { justPainted = false; }, 0);
   }
@@ -1070,13 +1125,827 @@
       parent.normalize();
     });
     hidePop();
+    renderHlView();
   });
   document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") hidePop(); });
   main.addEventListener("scroll", hidePop, { passive: true });
-  Array.prototype.forEach.call(document.querySelectorAll(".pane-scroll, .drawer-body"), function (el) {
+  outMain.addEventListener("scroll", hidePop, { passive: true });
+  hlMain.addEventListener("scroll", hidePop, { passive: true });
+  Array.prototype.forEach.call(document.querySelectorAll(".pane-scroll"), function (el) {
     el.addEventListener("scroll", hidePop, { passive: true });
   });
   window.addEventListener("scroll", hidePop, { passive: true });
+
+  /* ---------- 산출물 내보내기 ---------- */
+
+  // 산출물 카드 하나를 md · docx · pptx · txt · xlsx · csv 로 내려받는다. 외부 라이브러리 없이 브라우저 안에서 만든다 —
+  // 캔버스는 로컬 파일이라 오프라인에서도 돌아야 하고, 내용이 바깥으로 나가지 않아야 한다.
+  // 흐름: 카드 HTML → 문서 모델(제목 + 블록 목록) → 형식별 작성기. 표는 xlsx·csv 의 시트가 된다.
+  var FORMATS = [
+    { ext: "md", label: "마크다운" },
+    { ext: "docx", label: "워드" },
+    { ext: "pptx", label: "프레젠테이션" },
+    { ext: "txt", label: "텍스트" },
+    { ext: "xlsx", label: "엑셀" },
+    { ext: "csv", label: "CSV" }
+  ];
+  var ICON_EXPORT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
+
+  function exportButton() {
+    var box = document.createElement("div");
+    box.className = "out-actions";
+    box.innerHTML = '<button class="out-export" type="button" aria-haspopup="menu" aria-expanded="false">' + ICON_EXPORT + "내보내기</button>";
+    return box;
+  }
+
+  var outMenu = document.createElement("div");
+  outMenu.id = "out-menu";
+  outMenu.setAttribute("role", "menu");
+  FORMATS.forEach(function (f) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("role", "menuitem");
+    b.dataset.ext = f.ext;
+    b.innerHTML = '<span></span><span class="ext">.' + f.ext + "</span>";
+    b.firstChild.textContent = f.label + " 파일";
+    outMenu.appendChild(b);
+  });
+  document.body.appendChild(outMenu);
+  var outBtn = null;
+  function hideOutMenu() {
+    outMenu.classList.remove("show");
+    if (outBtn) outBtn.setAttribute("aria-expanded", "false");
+    outBtn = null;
+  }
+  function showOutMenu(btn) {
+    outBtn = btn;
+    btn.setAttribute("aria-expanded", "true");
+    outMenu.classList.add("show");
+    var rc = btn.getBoundingClientRect(), w = outMenu.offsetWidth, h = outMenu.offsetHeight;
+    var top = rc.bottom + 6;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, rc.top - h - 6);
+    outMenu.style.top = top + "px";
+    outMenu.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, rc.right - w)) + "px";
+    outMenu.querySelector("button").focus();
+  }
+  document.addEventListener("click", function (ev) {
+    var t = ev.target;
+    var btn = t.closest && t.closest(".out-export");
+    if (btn) { var same = btn === outBtn; hideOutMenu(); if (!same) showOutMenu(btn); return; }
+    var item = t.closest && t.closest("#out-menu button");
+    if (item && outBtn) {
+      var b = outBtn, sec = b.closest("section.card");
+      hideOutMenu();
+      exportCard(sec, item.dataset.ext, b);
+      return;
+    }
+    if (!outMenu.contains(t)) hideOutMenu();
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (!outMenu.classList.contains("show")) return;
+    if (ev.key === "Escape") { var b = outBtn; hideOutMenu(); if (b) b.focus(); return; }
+    if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
+    ev.preventDefault();
+    var items = Array.prototype.slice.call(outMenu.querySelectorAll("button"));
+    var i = items.indexOf(document.activeElement);
+    items[(i + (ev.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus();
+  });
+  outMain.addEventListener("scroll", hideOutMenu, { passive: true });
+  window.addEventListener("resize", hideOutMenu);
+
+  function exportCard(sec, ext, anchor) {
+    var model = cardModel(sec);
+    var name = (model.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "").replace(/\s+/g, " ").trim().slice(0, 80) || "산출물") + "." + ext;
+    var blob;
+    try {
+      if (ext === "md") blob = new Blob([toMd(model) + "\n"], { type: "text/markdown;charset=utf-8" });
+      else if (ext === "txt") blob = new Blob([toTxt(model) + "\n"], { type: "text/plain;charset=utf-8" });
+      else if (ext === "csv") blob = new Blob(["\ufeff" + toCsv(model)], { type: "text/csv;charset=utf-8" });
+      else if (ext === "xlsx") blob = zip(toXlsx(model), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      else if (ext === "docx") blob = zip(toDocx(model), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+      else if (ext === "pptx") blob = zip(toPptx(model), "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+    } catch (e) {
+      flash("내보내지 못했어요 · " + e.message, anchor);
+      return;
+    }
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    flash(name + " 내려받기", anchor);
+  }
+
+  /* 카드 HTML → 문서 모델 */
+
+  // 블록: h(level 2·3) · p · list · table · code · quote · kv · note · hr. 글은 runs = [{ text, b, i, code, href, br }]
+  var BLOCK_RE = /^(H[1-6]|P|UL|OL|TABLE|PRE|BLOCKQUOTE|DL|HR|DIV|SECTION|FIGURE|DETAILS)$/;
+
+  function runsOf(n, st, out) {
+    if (n.nodeType === 3) {
+      var t = n.data.replace(/\s+/g, " ");
+      if (t) out.push({ text: t, b: st.b, i: st.i, code: st.code, href: st.href });
+      return out;
+    }
+    if (n.nodeType !== 1 || n.classList.contains("out-actions")) return out;
+    var tag = n.nodeName;
+    if (tag === "BR") { out.push({ text: "\n", br: true }); return out; }
+    // 표 칸처럼 인라인 자리에 블록이 섞이면 줄을 바꿔 이어 붙인다
+    if (BLOCK_RE.test(tag) || tag === "LI") {
+      if (out.length && !out[out.length - 1].br) out.push({ text: "\n", br: true });
+      if (tag === "LI") out.push({ text: "• " });
+    }
+    var s2 = {
+      b: st.b || tag === "STRONG" || tag === "B" || /^H[1-6]$/.test(tag),
+      i: st.i || tag === "EM" || tag === "I",
+      code: st.code || tag === "CODE" || tag === "KBD",
+      href: tag === "A" && /^(https?:|mailto:)/.test(n.href || "") ? n.href : st.href
+    };
+    Array.prototype.forEach.call(n.childNodes, function (c) { runsOf(c, s2, out); });
+    return out;
+  }
+  function runsIn(el) {
+    var out = [];
+    Array.prototype.forEach.call(el.childNodes, function (c) { runsOf(c, {}, out); });
+    return tidy(out);
+  }
+  // 같은 꾸밈이 이어진 조각을 합치고, 양 끝 공백과 빈 조각을 걷어 낸다
+  function tidy(runs) {
+    var out = [];
+    runs.forEach(function (r) {
+      var p = out[out.length - 1];
+      if (p && !p.br && !r.br && !!p.b === !!r.b && !!p.i === !!r.i && !!p.code === !!r.code && p.href === r.href) p.text += r.text;
+      else out.push({ text: r.text, b: r.b, i: r.i, code: r.code, href: r.href, br: r.br });
+    });
+    out.forEach(function (r, i) {
+      if (r.br) return;
+      if (i === 0 || out[i - 1].br) r.text = r.text.replace(/^\s+/, "");
+      if (i === out.length - 1 || out[i + 1].br) r.text = r.text.replace(/\s+$/, "");
+    });
+    out = out.filter(function (r) { return r.br || r.text; });
+    while (out.length && out[0].br) out.shift();
+    while (out.length && out[out.length - 1].br) out.pop();
+    return out;
+  }
+  function plain(runs) { return runs.map(function (r) { return r.text; }).join(""); }
+
+  function listOf(el) {
+    var items = [];
+    Array.prototype.forEach.call(el.children, function (li) {
+      if (li.nodeName !== "LI") return;
+      var runs = [], subs = [];
+      Array.prototype.forEach.call(li.childNodes, function (n) {
+        if (n.nodeType === 1 && (n.nodeName === "UL" || n.nodeName === "OL")) subs.push(listOf(n));
+        else if (n.nodeType === 1 && n.nodeName === "P") {
+          if (runs.length) runs.push({ text: " " });
+          Array.prototype.forEach.call(n.childNodes, function (c) { runsOf(c, {}, runs); });
+        } else runsOf(n, {}, runs);
+      });
+      items.push({ runs: tidy(runs), subs: subs });
+    });
+    return { t: "list", ordered: el.nodeName === "OL", start: parseInt(el.getAttribute("start"), 10) || 1, items: items };
+  }
+
+  function tableOf(el) {
+    var rows = [];
+    Array.prototype.forEach.call(el.querySelectorAll("tr"), function (tr) {
+      if (tr.closest("table") !== el) return;
+      var cells = [];
+      Array.prototype.forEach.call(tr.children, function (c) {
+        if (c.nodeName !== "TD" && c.nodeName !== "TH") return;
+        cells.push(runsIn(c));
+        for (var k = 1; k < (parseInt(c.getAttribute("colspan"), 10) || 1); k++) cells.push([]);
+      });
+      var isHead = tr.parentNode.nodeName === "THEAD" ||
+        (!rows.length && tr.children.length && Array.prototype.every.call(tr.children, function (c) { return c.nodeName === "TH"; }));
+      if (cells.length) rows.push({ cells: cells, head: isHead });
+    });
+    var cols = rows.reduce(function (m, r) { return Math.max(m, r.cells.length); }, 0);
+    rows.forEach(function (r) { while (r.cells.length < cols) r.cells.push([]); });
+    return { t: "table", rows: rows, cols: cols };
+  }
+
+  function blocksOf(el, out) {
+    var loose = [];
+    function flush() { var r = tidy(loose); loose = []; if (r.length) out.push({ t: "p", runs: r }); }
+    Array.prototype.forEach.call(el.childNodes, function (n) {
+      if (n.nodeType === 1 && n.classList.contains("out-actions")) return;
+      if (n.nodeType !== 1 || !BLOCK_RE.test(n.nodeName)) { runsOf(n, {}, loose); return; }
+      flush();
+      var tag = n.nodeName;
+      if (/^H[1-6]$/.test(tag)) out.push({ t: "h", level: tag <= "H3" ? 2 : 3, runs: runsIn(n) });
+      else if (tag === "P") { var r = runsIn(n); if (r.length) out.push({ t: "p", runs: r }); }
+      else if (tag === "UL" || tag === "OL") out.push(listOf(n));
+      else if (tag === "TABLE") { var tb = tableOf(n); if (tb.rows.length) out.push(tb); }
+      else if (tag === "PRE") out.push({ t: "code", text: n.textContent.replace(/\t/g, "  ").replace(/\n+$/, "") });
+      else if (tag === "BLOCKQUOTE") out.push({ t: "quote", blocks: blocksOf(n, []) });
+      else if (tag === "HR") out.push({ t: "hr" });
+      else if (tag === "DL") {
+        var pairs = [], cur = null;
+        Array.prototype.forEach.call(n.children, function (c) {
+          if (c.nodeName === "DT") { cur = { k: runsIn(c), v: [] }; pairs.push(cur); }
+          else if (c.nodeName === "DD") { if (!cur) { cur = { k: [], v: [] }; pairs.push(cur); } if (cur.v.length) cur.v.push({ text: "\n", br: true }); cur.v = cur.v.concat(runsIn(c)); }
+        });
+        out.push({ t: "kv", pairs: pairs });
+      } else if (tag === "DIV" && n.classList.contains("note")) {
+        var tagEl = n.querySelector(":scope > .tag");
+        var inner = n.cloneNode(true);
+        var tg = inner.querySelector(":scope > .tag");
+        if (tg) tg.remove();
+        out.push({ t: "note", tag: tagEl ? tagEl.textContent.trim() : "", kind: n.classList.contains("warn") ? "warn" : n.classList.contains("ok") ? "ok" : "", blocks: blocksOf(inner, []) });
+      } else blocksOf(n, out);
+    });
+    flush();
+    return out;
+  }
+
+  function cardModel(sec) {
+    var h2 = sec.querySelector(":scope > h2");
+    var body = sec.cloneNode(true);
+    var h = body.querySelector(":scope > h2");
+    if (h) h.remove();
+    return {
+      title: h2 ? h2.textContent.replace(/\s+/g, " ").trim() : sec.id,
+      canvas: document.getElementById("doc-title").textContent.trim(),
+      blocks: blocksOf(body, [])
+    };
+  }
+
+  // 화면 폭 — 한글·전각은 두 칸
+  function dw(s) {
+    var w = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      if (c >= 0xdc00 && c <= 0xdfff) continue;
+      w += (c >= 0x1100 && (c <= 0x115f || (c >= 0x2e80 && c <= 0xa4cf) || (c >= 0xac00 && c <= 0xd7a3) || (c >= 0xf900 && c <= 0xfaff) || (c >= 0xfe30 && c <= 0xfe4f) || (c >= 0xff00 && c <= 0xff60) || (c >= 0xffe0 && c <= 0xffe6) || (c >= 0xd800 && c <= 0xdbff))) ? 2 : 1;
+    }
+    return w;
+  }
+  function pad(s, w) { var n = w - dw(s); return n > 0 ? s + new Array(n + 1).join(" ") : s; }
+
+  /* 마크다운 */
+
+  function mdRuns(runs) {
+    return runs.map(function (r) {
+      if (r.br) return "  \n";
+      var t = r.code ? r.text : r.text.replace(/([\\`*\[\]<])/g, "\\$1");
+      var m = t.match(/^(\s*)([\s\S]*?)(\s*)$/), core = m[2];
+      if (!core) return t;
+      if (r.code) core = core.indexOf("`") >= 0 ? "`` " + core + " ``" : "`" + core + "`";
+      if (r.i) core = "*" + core + "*";
+      if (r.b) core = "**" + core + "**";
+      if (r.href) core = "[" + core + "](" + r.href + ")";
+      return m[1] + core + m[3];
+    }).join("");
+  }
+  function mdList(l, depth) {
+    var lines = [];
+    l.items.forEach(function (it, i) {
+      var mark = l.ordered ? (l.start + i) + "." : "-";
+      var ind = new Array(depth + 1).join("   ");
+      lines.push(ind + mark + " " + mdRuns(it.runs).replace(/  \n/g, "  \n" + ind + "   "));
+      it.subs.forEach(function (s) { lines.push(mdList(s, depth + 1)); });
+    });
+    return lines.join("\n");
+  }
+  function mdBlocks(blocks) {
+    return blocks.map(function (b) {
+      if (b.t === "h") return (b.level === 2 ? "## " : "### ") + mdRuns(b.runs);
+      if (b.t === "p") return mdRuns(b.runs);
+      if (b.t === "list") return mdList(b, 0);
+      if (b.t === "code") { var f = /```/.test(b.text) ? "~~~~" : "```"; return f + "\n" + b.text + "\n" + f; }
+      if (b.t === "hr") return "---";
+      if (b.t === "quote") return mdBlocks(b.blocks).replace(/^/gm, "> ").replace(/^> $/gm, ">");
+      if (b.t === "note") return ((b.tag ? "**" + b.tag + "**\n\n" : "") + mdBlocks(b.blocks)).replace(/^/gm, "> ").replace(/^> $/gm, ">");
+      if (b.t === "kv") return b.pairs.map(function (p) { return "- **" + plain(p.k) + "**: " + mdRuns(p.v).replace(/  \n/g, " "); }).join("\n");
+      if (b.t === "table") {
+        var rows = b.rows.map(function (r) {
+          return "| " + r.cells.map(function (c) { return mdRuns(c).replace(/\|/g, "\\|").replace(/  \n/g, "<br>"); }).join(" | ") + " |";
+        });
+        var sep = "| " + new Array(b.cols + 1).join("--- | ").replace(/ $/, "");
+        var hi = b.rows[0].head ? 1 : 0;
+        if (!hi) rows.unshift("| " + new Array(b.cols + 1).join("  | ").replace(/ $/, ""));
+        rows.splice(1, 0, sep);
+        return rows.join("\n");
+      }
+      return "";
+    }).filter(Boolean).join("\n\n");
+  }
+  function toMd(m) { return "# " + m.title + "\n\n" + mdBlocks(m.blocks); }
+
+  /* 텍스트 */
+
+  function txtRuns(runs) { return runs.map(function (r) { return r.text; }).join(""); }
+  function txtList(l, depth) {
+    var lines = [];
+    l.items.forEach(function (it, i) {
+      var ind = new Array(depth + 1).join("  ");
+      var mark = l.ordered ? (l.start + i) + ". " : "- ";
+      lines.push(ind + mark + txtRuns(it.runs).replace(/\n/g, "\n" + ind + new Array(mark.length + 1).join(" ")));
+      it.subs.forEach(function (s) { lines.push(txtList(s, depth + 1)); });
+    });
+    return lines.join("\n");
+  }
+  function txtTable(b) {
+    var cells = b.rows.map(function (r) { return r.cells.map(function (c) { return txtRuns(c).replace(/\n/g, " / "); }); });
+    var w = [];
+    cells.forEach(function (r) { r.forEach(function (c, i) { w[i] = Math.max(w[i] || 0, dw(c)); }); });
+    var lines = [];
+    cells.forEach(function (r, ri) {
+      lines.push(r.map(function (c, i) { return i === r.length - 1 ? c : pad(c, w[i]); }).join("  |  ").replace(/\s+$/, ""));
+      if (b.rows[ri].head && !(b.rows[ri + 1] && b.rows[ri + 1].head)) {
+        lines.push(w.map(function (x) { return new Array(x + 1).join("-"); }).join("--+--"));
+      }
+    });
+    return lines.join("\n");
+  }
+  function txtBlocks(blocks) {
+    return blocks.map(function (b) {
+      if (b.t === "h") { var t = txtRuns(b.runs); return t + "\n" + new Array(dw(t) + 1).join(b.level === 2 ? "-" : "·"); }
+      if (b.t === "p") return txtRuns(b.runs);
+      if (b.t === "list") return txtList(b, 0);
+      if (b.t === "code") return b.text.replace(/^/gm, "    ");
+      if (b.t === "hr") return "----------";
+      if (b.t === "quote") return txtBlocks(b.blocks).replace(/^/gm, "> ");
+      if (b.t === "note") return ((b.tag ? "[" + b.tag + "]\n" : "") + txtBlocks(b.blocks)).replace(/^/gm, "| ");
+      if (b.t === "kv") {
+        var kw = b.pairs.reduce(function (m, p) { return Math.max(m, dw(txtRuns(p.k))); }, 0);
+        return b.pairs.map(function (p) { return pad(txtRuns(p.k), kw) + " : " + txtRuns(p.v).replace(/\n/g, " / "); }).join("\n");
+      }
+      if (b.t === "table") return txtTable(b);
+      return "";
+    }).filter(Boolean).join("\n\n");
+  }
+  function toTxt(m) { return m.title + "\n" + new Array(dw(m.title) + 1).join("=") + "\n\n" + txtBlocks(m.blocks); }
+
+  /* 시트(xlsx · csv) — 표가 있으면 표 하나가 시트 하나, 없으면 글 전체를 '구분 · 내용' 두 칸으로 편다 */
+
+  function sheetsOf(m) {
+    var sheets = [], heading = "", n = 0;
+    function walk(blocks) {
+      blocks.forEach(function (b) {
+        if (b.t === "h") heading = plain(b.runs);
+        else if (b.t === "table") {
+          n++;
+          sheets.push({
+            name: heading || "표 " + n,
+            head: b.rows.filter(function (r, i) { return r.head && b.rows.slice(0, i).every(function (x) { return x.head; }); }).length,
+            rows: b.rows.map(function (r) { return r.cells.map(plain); })
+          });
+        } else if (b.t === "quote" || b.t === "note") walk(b.blocks);
+      });
+    }
+    walk(m.blocks);
+    if (sheets.length) return sheets;
+    var rows = [["구분", "내용"]];
+    heading = m.title;
+    function flat(blocks) {
+      blocks.forEach(function (b) {
+        if (b.t === "h") heading = plain(b.runs);
+        else if (b.t === "p") rows.push([heading, plain(b.runs)]);
+        else if (b.t === "code") rows.push([heading, b.text]);
+        else if (b.t === "kv") b.pairs.forEach(function (p) { rows.push([plain(p.k), plain(p.v)]); });
+        else if (b.t === "list") (function li(l, depth) {
+          l.items.forEach(function (it, i) {
+            rows.push([heading, new Array(depth + 1).join("  ") + (l.ordered ? (l.start + i) + ". " : "") + plain(it.runs)]);
+            it.subs.forEach(function (s) { li(s, depth + 1); });
+          });
+        })(b, 0);
+        else if (b.t === "quote" || b.t === "note") flat(b.blocks);
+      });
+    }
+    flat(m.blocks);
+    return [{ name: m.title, head: 1, rows: rows }];
+  }
+
+  function toCsv(m) {
+    var sheets = sheetsOf(m), lines = [];
+    function cell(v) { return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    sheets.forEach(function (s, i) {
+      if (sheets.length > 1) { if (i) lines.push(""); lines.push(cell(s.name)); }
+      s.rows.forEach(function (r) { lines.push(r.map(cell).join(",")); });
+    });
+    return lines.join("\r\n") + "\r\n";
+  }
+
+  /* OOXML 공통 */
+
+  function xe(s) {
+    return String(s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  var XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  var NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+  var NS_PR = "http://schemas.openxmlformats.org/package/2006/relationships";
+  var CT = "application/vnd.openxmlformats-officedocument.";
+  function rels(list) {
+    return XML + '<Relationships xmlns="' + NS_PR + '">' + list.map(function (r) {
+      return '<Relationship Id="' + r[0] + '" Type="' + (r[1].indexOf("http") === 0 ? r[1] : NS_R + "/" + r[1]) + '" Target="' + xe(r[2]) + '"' + (r[3] ? ' TargetMode="External"' : "") + "/>";
+    }).join("") + "</Relationships>";
+  }
+  function types(overrides) {
+    return XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      overrides.map(function (o) { return '<Override PartName="' + o[0] + '" ContentType="' + o[1] + '"/>'; }).join("") + "</Types>";
+  }
+  function coreProps(title) {
+    var now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    return XML + '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+      "<dc:title>" + xe(title) + "</dc:title><dc:creator>talk-on-canvas</dc:creator>" +
+      '<dcterms:created xsi:type="dcterms:W3CDTF">' + now + '</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">' + now + "</dcterms:modified></cp:coreProperties>";
+  }
+  var CORE_CT = ["/docProps/core.xml", "application/vnd.openxmlformats-package.core-properties+xml"];
+  var CORE_REL = ["rId9", "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties", "docProps/core.xml"];
+
+  // 무압축(STORE) zip — Office 파일은 zip 안의 XML 묶음이다
+  var CRC_T = (function () {
+    var t = [];
+    for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(b) {
+    var c = 0xffffffff;
+    for (var i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  }
+  function zip(files, mime) {
+    var enc = new TextEncoder(), parts = [], central = [], off = 0, d = new Date();
+    var dosT = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    var dosD = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    files.forEach(function (f) {
+      var name = enc.encode(f[0]), data = enc.encode(f[1]), crc = crc32(data);
+      var h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+      h.setUint16(10, dosT, true); h.setUint16(12, dosD, true); h.setUint32(14, crc, true);
+      h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      var c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+      c.setUint16(12, dosT, true); c.setUint16(14, dosD, true); c.setUint32(16, crc, true);
+      c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true);
+      c.setUint32(42, off, true);
+      central.push(new Uint8Array(c.buffer), name);
+      off += 30 + name.length + data.length;
+    });
+    var size = central.reduce(function (s, a) { return s + a.length; }, 0);
+    var e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, size, true); e.setUint32(16, off, true);
+    return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: mime });
+  }
+
+  /* 엑셀 */
+
+  function colName(i) { var s = ""; for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; }
+  function toXlsx(m) {
+    var sheets = sheetsOf(m), used = {};
+    sheets.forEach(function (s) {
+      var base = s.name.replace(/[\[\]:*?\/\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 28) || "시트", nm = base, k = 2;
+      while (used[nm.toLowerCase()]) nm = base + " " + k++;
+      used[nm.toLowerCase()] = 1;
+      s.sheetName = nm;
+    });
+    var files = [], ov = [["/xl/workbook.xml", CT + "spreadsheetml.sheet.main+xml"], ["/xl/styles.xml", CT + "spreadsheetml.styles+xml"], CORE_CT];
+    sheets.forEach(function (s, si) {
+      var cols = s.rows.reduce(function (mx, r) { return Math.max(mx, r.length); }, 0), w = [];
+      var rowsXml = s.rows.map(function (r, ri) {
+        return '<row r="' + (ri + 1) + '">' + r.map(function (v, ci) {
+          v = v || "";
+          var lw = v.split("\n").reduce(function (mx, l) { return Math.max(mx, dw(l)); }, 0);
+          w[ci] = Math.max(w[ci] || 6, Math.min(60, lw + 2));
+          var ref = colName(ci) + (ri + 1), st = ri < s.head ? 1 : /\n/.test(v) ? 2 : 0;
+          if (ri >= s.head && /^-?(0|[1-9]\d*)(\.\d+)?$/.test(v) && v.length < 16) return '<c r="' + ref + '"' + (st ? ' s="' + st + '"' : "") + "><v>" + v + "</v></c>";
+          return '<c r="' + ref + '" t="inlineStr"' + (st ? ' s="' + st + '"' : "") + '><is><t xml:space="preserve">' + xe(v) + "</t></is></c>";
+        }).join("") + "</row>";
+      }).join("");
+      var colsXml = cols ? "<cols>" + w.map(function (x, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + x + '" customWidth="1"/>'; }).join("") + "</cols>" : "";
+      var view = s.head ? '<sheetViews><sheetView workbookViewId="0"' + (si ? "" : ' tabSelected="1"') + '><pane ySplit="' + s.head + '" topLeftCell="A' + (s.head + 1) + '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' : "";
+      files.push(["xl/worksheets/sheet" + (si + 1) + ".xml", XML + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + view + colsXml + "<sheetData>" + rowsXml + "</sheetData></worksheet>"]);
+      ov.push(["/xl/worksheets/sheet" + (si + 1) + ".xml", CT + "spreadsheetml.worksheet+xml"]);
+    });
+    files.unshift(["[Content_Types].xml", types(ov)]);
+    files.push(["_rels/.rels", rels([["rId1", "officeDocument", "xl/workbook.xml"], CORE_REL])]);
+    files.push(["docProps/core.xml", coreProps(m.title)]);
+    files.push(["xl/workbook.xml", XML + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="' + NS_R + '"><sheets>' +
+      sheets.map(function (s, i) { return '<sheet name="' + xe(s.sheetName) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join("") + "</sheets></workbook>"]);
+    files.push(["xl/_rels/workbook.xml.rels", rels(sheets.map(function (s, i) { return ["rId" + (i + 1), "worksheet", "worksheets/sheet" + (i + 1) + ".xml"]; })
+      .concat([["rId" + (sheets.length + 1), "styles", "styles.xml"]]))]);
+    files.push(["xl/styles.xml", XML + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<fonts count="2"><font><sz val="11"/><name val="Malgun Gothic"/></font><font><b/><sz val="11"/><name val="Malgun Gothic"/></font></fonts>' +
+      '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F5"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+      '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFB8BEC8"/></bottom><diagonal/></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top"/></xf>' +
+      '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>' +
+      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']);
+    return files;
+  }
+
+  /* 워드 */
+
+  function toDocx(m) {
+    var links = [], nums = [], body = [];
+    function rx(runs, bold) {
+      return runs.map(function (r) {
+        if (r.br) return "<w:r><w:br/></w:r>";
+        var pr = (r.href ? '<w:rStyle w:val="Hyperlink"/>' : "") +
+          (r.code ? '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>' : "") +
+          (r.b || bold ? "<w:b/>" : "") + (r.i ? "<w:i/>" : "") +
+          (r.code ? '<w:sz w:val="19"/><w:shd w:val="clear" w:color="auto" w:fill="EEF1F5"/>' : "");
+        var run = "<w:r>" + (pr ? "<w:rPr>" + pr + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + xe(r.text) + "</w:t></w:r>";
+        if (!r.href) return run;
+        links.push(r.href);
+        return '<w:hyperlink r:id="rIdL' + links.length + '">' + run + "</w:hyperlink>";
+      }).join("");
+    }
+    function para(style, runsXml, ppr) {
+      return "<w:p>" + (style || ppr ? "<w:pPr>" + (style ? '<w:pStyle w:val="' + style + '"/>' : "") + (ppr || "") + "</w:pPr>" : "") + runsXml + "</w:p>";
+    }
+    function list(l, depth, quote) {
+      var numId = 1;
+      if (l.ordered) { nums.push(l.start); numId = nums.length + 1; }
+      l.items.forEach(function (it) {
+        body.push(para("ListParagraph", rx(it.runs), '<w:numPr><w:ilvl w:val="' + Math.min(depth, 8) + '"/><w:numId w:val="' + numId + '"/></w:numPr>' + (quote ? '<w:ind w:left="' + (360 * (depth + 1) + 360) + '" w:hanging="360"/>' : "")));
+        it.subs.forEach(function (s) { list(s, depth + 1, quote); });
+      });
+    }
+    function table(b) {
+      var gw = Math.floor(9026 / Math.max(1, b.cols));
+      body.push('<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/><w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr><w:tblGrid>' +
+        new Array(b.cols + 1).join('<w:gridCol w:w="' + gw + '"/>') + "</w:tblGrid>" +
+        b.rows.map(function (r) {
+          return "<w:tr>" + (r.head ? "<w:trPr><w:tblHeader/></w:trPr>" : "") + r.cells.map(function (c) {
+            return '<w:tc><w:tcPr><w:tcW w:w="' + gw + '" w:type="dxa"/>' + (r.head ? '<w:shd w:val="clear" w:color="auto" w:fill="EEF1F5"/>' : "") + "</w:tcPr>" +
+              para("TableText", rx(c, r.head)) + "</w:tc>";
+          }).join("") + "</w:tr>";
+        }).join("") + "</w:tbl>");
+      body.push(para("TableGap", ""));
+    }
+    function blocks(bs, quote) {
+      bs.forEach(function (b) {
+        if (b.t === "h") body.push(para(b.level === 2 ? "Heading1" : "Heading2", rx(b.runs)));
+        else if (b.t === "p") body.push(para(quote ? "Quote" : null, rx(b.runs)));
+        else if (b.t === "list") list(b, 0, quote);
+        else if (b.t === "table") table(b);
+        else if (b.t === "code") body.push(para("Code", b.text.split("\n").map(function (l, i) { return (i ? "<w:r><w:br/></w:r>" : "") + '<w:r><w:t xml:space="preserve">' + xe(l) + "</w:t></w:r>"; }).join("")));
+        else if (b.t === "hr") body.push(para(null, "", '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="C9CED6"/></w:pBdr>'));
+        else if (b.t === "quote") blocks(b.blocks, true);
+        else if (b.t === "note") {
+          if (b.tag) body.push(para("Quote", rx([{ text: b.tag, b: true }])));
+          blocks(b.blocks, true);
+        } else if (b.t === "kv") b.pairs.forEach(function (p) {
+          body.push(para(quote ? "Quote" : null, rx(p.k, true) + '<w:r><w:t xml:space="preserve">  </w:t></w:r>' + rx(p.v)));
+        });
+      });
+    }
+    body.push(para("Title", rx([{ text: m.title }])));
+    blocks(m.blocks, false);
+
+    var doc = XML + '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="' + NS_R + '"><w:body>' + body.join("") +
+      '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+
+    function lvls(fmt, texts) {
+      var s = "";
+      for (var i = 0; i < 9; i++) {
+        s += '<w:lvl w:ilvl="' + i + '"><w:start w:val="1"/><w:numFmt w:val="' + (fmt === "bullet" ? "bullet" : "decimal") + '"/><w:lvlText w:val="' + (fmt === "bullet" ? texts[i % 3] : "%" + (i + 1) + ".") + '"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="' + (360 * (i + 1)) + '" w:hanging="360"/></w:pPr>' +
+          (fmt === "bullet" ? '<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/></w:rPr>' : "") + "</w:lvl>";
+      }
+      return s;
+    }
+    var numbering = XML + '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/>' + lvls("bullet", ["•", "◦", "▪"]) + "</w:abstractNum>" +
+      '<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="hybridMultilevel"/>' + lvls("decimal") + "</w:abstractNum>" +
+      '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>' +
+      nums.map(function (start, i) {
+        var o = "";
+        for (var k = 0; k < 9; k++) o += '<w:lvlOverride w:ilvl="' + k + '"><w:startOverride w:val="' + (k ? 1 : start) + '"/></w:lvlOverride>';
+        return '<w:num w:numId="' + (i + 2) + '"><w:abstractNumId w:val="1"/>' + o + "</w:num>";
+      }).join("") + "</w:numbering>";
+
+    function st(id, name, ppr, rpr, extra) {
+      return '<w:style w:type="paragraph" w:styleId="' + id + '"><w:name w:val="' + name + '"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/>' + (extra || "") + "<w:qFormat/>" +
+        (ppr ? "<w:pPr>" + ppr + "</w:pPr>" : "") + (rpr ? "<w:rPr>" + rpr + "</w:rPr>" : "") + "</w:style>";
+    }
+    var styles = XML + '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Malgun Gothic" w:cs="Arial"/><w:color w:val="1D2026"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="en-US" w:eastAsia="ko-KR"/></w:rPr></w:rPrDefault>' +
+      '<w:pPrDefault><w:pPr><w:spacing w:after="140" w:line="312" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>' +
+      '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>' +
+      st("Title", "Title", '<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="8" w:color="1F6FEB"/></w:pBdr><w:spacing w:after="320"/>', '<w:b/><w:sz w:val="40"/><w:szCs w:val="40"/>') +
+      st("Heading1", "heading 1", '<w:keepNext/><w:spacing w:before="360" w:after="140"/><w:outlineLvl w:val="0"/>', '<w:b/><w:sz w:val="30"/><w:szCs w:val="30"/>') +
+      st("Heading2", "heading 2", '<w:keepNext/><w:spacing w:before="260" w:after="100"/><w:outlineLvl w:val="1"/>', '<w:b/><w:sz w:val="25"/><w:szCs w:val="25"/>') +
+      st("ListParagraph", "List Paragraph", '<w:spacing w:after="60"/>') +
+      st("Quote", "Quote", '<w:pBdr><w:left w:val="single" w:sz="18" w:space="10" w:color="C9CED6"/></w:pBdr><w:ind w:left="360"/>', '<w:color w:val="4A515C"/>') +
+      st("Code", "Code", '<w:shd w:val="clear" w:color="auto" w:fill="F3F4F6"/><w:spacing w:after="160" w:line="264" w:lineRule="auto"/><w:ind w:left="120" w:right="120"/>', '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="18"/><w:szCs w:val="18"/>') +
+      st("TableText", "Table Text", '<w:spacing w:after="0" w:line="276" w:lineRule="auto"/>', '<w:sz w:val="19"/><w:szCs w:val="19"/>') +
+      st("TableGap", "Table Gap", '<w:spacing w:after="60" w:line="240" w:lineRule="auto"/>', '<w:sz w:val="12"/>') +
+      '<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:rPr><w:color w:val="1F6FEB"/><w:u w:val="single"/></w:rPr></w:style>' +
+      '<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>' +
+      '<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/><w:basedOn w:val="TableNormal"/><w:tblPr><w:tblBorders>' +
+      '<w:top w:val="single" w:sz="4" w:space="0" w:color="C9CED6"/><w:left w:val="single" w:sz="4" w:space="0" w:color="C9CED6"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="C9CED6"/><w:right w:val="single" w:sz="4" w:space="0" w:color="C9CED6"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="C9CED6"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="C9CED6"/>' +
+      '</w:tblBorders><w:tblCellMar><w:top w:w="70" w:type="dxa"/><w:left w:w="110" w:type="dxa"/><w:bottom w:w="70" w:type="dxa"/><w:right w:w="110" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>' +
+      "</w:styles>";
+
+    return [
+      ["[Content_Types].xml", types([["/word/document.xml", CT + "wordprocessingml.document.main+xml"], ["/word/styles.xml", CT + "wordprocessingml.styles+xml"], ["/word/numbering.xml", CT + "wordprocessingml.numbering+xml"], CORE_CT])],
+      ["_rels/.rels", rels([["rId1", "officeDocument", "word/document.xml"], CORE_REL])],
+      ["docProps/core.xml", coreProps(m.title)],
+      ["word/document.xml", doc],
+      ["word/styles.xml", styles],
+      ["word/numbering.xml", numbering],
+      ["word/_rels/document.xml.rels", rels([["rId1", "styles", "styles.xml"], ["rId2", "numbering", "numbering.xml"]]
+        .concat(links.map(function (h, i) { return ["rIdL" + (i + 1), "hyperlink", h, true]; })))]
+    ];
+  }
+
+  /* 프레젠테이션 */
+
+  // 16:9 한 장에 제목 + 본문. 소제목(h3)마다 새 장을 열고, 넘치면 '(계속)' 장으로 나눈다. 표는 10행씩 따로 장을 쓴다.
+  var EMU = 914400, SW = 12192000, SH = 6858000;
+  var P_NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="' + NS_R + '" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+  var FONT = '<a:latin typeface="Arial"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Arial"/>';
+  var C = { ink: "1D2026", dim: "5B6370", faint: "8B929D", accent: "1F6FEB", line: "D5D9E0", head: "EEF1F5", code: "F3F4F6" };
+
+  function toPptx(m) {
+    var slides = [], sid = 0;
+    function rp(r, sz, color, b) {
+      return '<a:rPr lang="ko-KR" sz="' + sz + '"' + (b || r.b ? ' b="1"' : "") + (r.i ? ' i="1"' : "") + ' dirty="0"><a:solidFill><a:srgbClr val="' + (r.href ? C.accent : color) + '"/></a:solidFill>' +
+        (r.code ? '<a:latin typeface="Consolas"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Consolas"/>' : FONT) + "</a:rPr>";
+    }
+    function runsX(runs, sz, color, b) {
+      return runs.map(function (r) {
+        return r.br ? "<a:br>" + rp(r, sz, color, b) + "</a:br>" : "<a:r>" + rp(r, sz, color, b) + "<a:t>" + xe(r.text) + "</a:t></a:r>";
+      }).join("");
+    }
+    function pX(o) {
+      var bu = o.bullet === "num" ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"' + (o.start > 1 ? ' startAt="' + o.start + '"' : "") + "/>"
+        : o.bullet ? '<a:buFont typeface="Arial"/><a:buChar char="' + (o.lvl % 2 ? "–" : "•") + '"/>' : "<a:buNone/>";
+      var marL = o.bullet ? 342900 * (o.lvl + 1) : 0;
+      return '<a:p><a:pPr marL="' + marL + '" indent="' + (o.bullet ? -285750 : 0) + '"' + (o.lvl ? ' lvl="' + Math.min(o.lvl, 8) + '"' : "") + ">" +
+        '<a:lnSpc><a:spcPct val="' + (o.code ? 100000 : 115000) + '"/></a:lnSpc><a:spcBef><a:spcPts val="' + (o.gap || 0) + '"/></a:spcBef>' + bu + "</a:pPr>" +
+        runsX(o.runs, o.sz, o.color || C.ink, o.b) + '<a:endParaRPr lang="ko-KR" sz="' + o.sz + '" dirty="0"/></a:p>';
+    }
+    function textBox(name, x, y, w, h, paras, anchor) {
+      sid++;
+      return '<p:sp><p:nvSpPr><p:cNvPr id="' + (sid + 1) + '" name="' + name + " " + sid + '"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>' +
+        '<p:spPr><a:xfrm><a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + w + '" cy="' + h + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
+        '<p:txBody><a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="' + (anchor || "t") + '"><a:normAutofit/></a:bodyPr><a:lstStyle/>' + paras.join("") + "</p:txBody></p:sp>";
+    }
+    function rect(x, y, w, h, color) {
+      sid++;
+      return '<p:sp><p:nvSpPr><p:cNvPr id="' + (sid + 1) + '" name="Shape ' + sid + '"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+        '<p:spPr><a:xfrm><a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + w + '" cy="' + h + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="' + color + '"/></a:solidFill><a:ln><a:noFill/></a:ln></p:spPr>' +
+        '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="ko-KR"/></a:p></p:txBody></p:sp>';
+    }
+    function tableFrame(x, y, w, rows, cols) {
+      sid++;
+      var gw = Math.floor(w / cols), rh = 370840;
+      var line = '<a:solidFill><a:srgbClr val="' + C.line + '"/></a:solidFill>';
+      var xml = '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="' + (sid + 1) + '" name="Table ' + sid + '"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr>' +
+        '<p:xfrm><a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + gw * cols + '" cy="' + rh * rows.length + '"/></p:xfrm>' +
+        '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1"/><a:tblGrid>' +
+        new Array(cols + 1).join('<a:gridCol w="' + gw + '"/>') + "</a:tblGrid>" +
+        rows.map(function (r) {
+          return '<a:tr h="' + rh + '">' + r.cells.map(function (c) {
+            return '<a:tc><a:txBody><a:bodyPr/><a:lstStyle/>' + pX({ runs: c, sz: 1200, b: r.head, color: r.head ? C.ink : C.ink }) + "</a:txBody>" +
+              '<a:tcPr marL="91440" marR="91440" marT="54864" marB="54864"><a:lnL w="0"><a:noFill/></a:lnL><a:lnR w="0"><a:noFill/></a:lnR><a:lnT w="0"><a:noFill/></a:lnT>' +
+              '<a:lnB w="9525">' + line + "</a:lnB>" + (r.head ? '<a:solidFill><a:srgbClr val="' + C.head + '"/></a:solidFill>' : "<a:noFill/>") + "</a:tcPr></a:tc>";
+          }).join("") + "</a:tr>";
+        }).join("") + "</a:tbl></a:graphicData></a:graphic></p:graphicFrame>";
+      return xml;
+    }
+
+    var MX = Math.round(0.7 * EMU), BW = SW - 2 * MX, BY = Math.round(1.55 * EMU), BH = SH - BY - Math.round(0.75 * EMU);
+    function chrome(title, cont) {
+      return rect(MX, Math.round(0.55 * EMU), Math.round(0.08 * EMU), Math.round(0.5 * EMU), C.accent) +
+        textBox("Title", MX + Math.round(0.25 * EMU), Math.round(0.5 * EMU), BW - Math.round(0.25 * EMU), Math.round(0.6 * EMU),
+          [pX({ runs: [{ text: title + (cont ? " (계속)" : "") }], sz: dw(title) > 56 ? 2000 : 2600, b: true })], "ctr");
+    }
+    function footer(n) {
+      return textBox("Footer", MX, SH - Math.round(0.5 * EMU), BW, Math.round(0.3 * EMU),
+        ['<a:p><a:pPr algn="l"><a:buNone/></a:pPr><a:r>' + rp({}, 1000, C.faint) + "<a:t>" + xe(m.title) + "</a:t></a:r>" +
+          '<a:r>' + rp({}, 1000, C.faint) + "<a:t>" + xe("   ·   " + n) + "</a:t></a:r></a:p>"]);
+    }
+    function push(inner) { slides.push(inner); }
+
+    // 제목 장
+    sid = 0;
+    push(rect(0, 0, Math.round(0.18 * EMU), SH, C.accent) +
+      textBox("Title", Math.round(1 * EMU), Math.round(2.3 * EMU), SW - Math.round(2 * EMU), Math.round(1.4 * EMU),
+        [pX({ runs: [{ text: m.title }], sz: 4000, b: true })], "b") +
+      textBox("Subtitle", Math.round(1 * EMU), Math.round(3.9 * EMU), SW - Math.round(2 * EMU), Math.round(0.8 * EMU),
+        [pX({ runs: [{ text: m.canvas }], sz: 1600, color: C.dim }), pX({ runs: [{ text: new Date().toLocaleDateString("ko-KR") }], sz: 1400, color: C.faint, gap: 600 })]));
+
+    // 본문 — 블록을 장 단위 묶음으로
+    var groups = [], cur = { title: m.title, items: [] };
+    groups.push(cur);
+    var CPL = 86, BUDGET = 13; // 18pt 기준 한 줄 화면 폭 · 한 장 줄 수
+    function lines(runs, ind) { return plain(runs).split("\n").reduce(function (s, l) { return s + Math.max(1, Math.ceil(dw(l) / (CPL - ind * 6))); }, 0); }
+    function addText(p, n) { cur.items.push({ k: "p", p: p, n: n }); }
+    function walk(bs, quote) {
+      bs.forEach(function (b) {
+        if (b.t === "h" && b.level === 2) { cur = { title: plain(b.runs), items: [] }; groups.push(cur); }
+        else if (b.t === "h") addText({ runs: b.runs, sz: 1800, b: true, gap: 900 }, 1.4);
+        else if (b.t === "p") addText({ runs: b.runs, sz: 1800, gap: 600, color: quote ? C.dim : C.ink }, lines(b.runs, 0) + 0.4);
+        else if (b.t === "list") (function li(l, lvl) {
+          l.items.forEach(function (it, i) {
+            addText({ runs: it.runs, sz: lvl ? 1600 : 1800, bullet: l.ordered ? "num" : true, start: l.start, lvl: lvl, gap: i ? 300 : 600, color: quote ? C.dim : C.ink }, lines(it.runs, lvl + 1) + 0.2);
+            it.subs.forEach(function (s) { li(s, lvl + 1); });
+          });
+        })(b, 0);
+        else if (b.t === "code") b.text.split("\n").forEach(function (l, i) {
+          addText({ runs: [{ text: l || " ", code: true }], sz: 1200, code: true, color: C.dim, gap: i ? 0 : 600 }, 0.7);
+        });
+        else if (b.t === "kv") b.pairs.forEach(function (p) {
+          var r = [{ text: plain(p.k), b: true }, { text: "  " }].concat(p.v.filter(function (x) { return !x.br; }));
+          addText({ runs: r, sz: 1800, gap: 300 }, lines(r, 0) + 0.2);
+        });
+        else if (b.t === "quote") walk(b.blocks, true);
+        else if (b.t === "note") { if (b.tag) addText({ runs: [{ text: b.tag, b: true }], sz: 1400, color: C.faint, gap: 600 }, 1); walk(b.blocks, true); }
+        else if (b.t === "table") cur.items.push({ k: "t", t: b });
+      });
+    }
+    walk(m.blocks, false);
+
+    var page = 1;
+    groups.forEach(function (g, gi) {
+      if (!g.items.length && gi === 0) return;
+      var buf = [], used = 0, cont = false;
+      function flushText() {
+        if (!buf.length) return;
+        page++; sid = 0;
+        var paras = buf.map(function (it, i) { var p = it.p; if (i === 0) p = Object.assign({}, p, { gap: 0 }); return pX(p); });
+        push(chrome(g.title, cont) + textBox("Body", MX, BY, BW, BH, paras) + footer(page));
+        buf = []; used = 0; cont = true;
+      }
+      if (!g.items.length) { page++; sid = 0; push(chrome(g.title, false) + footer(page)); return; }
+      g.items.forEach(function (it) {
+        if (it.k === "t") {
+          flushText();
+          var head = it.t.rows.filter(function (r, i) { return r.head && it.t.rows.slice(0, i).every(function (x) { return x.head; }); });
+          var data = it.t.rows.slice(head.length), per = 10 - head.length;
+          for (var s = 0; s === 0 || s < data.length; s += per) {
+            page++; sid = 0;
+            push(chrome(g.title, cont) + tableFrame(MX, BY, BW, head.concat(data.slice(s, s + per)), it.t.cols) + footer(page));
+            cont = true;
+          }
+          return;
+        }
+        if (used + it.n > BUDGET && buf.length) flushText();
+        buf.push(it); used += it.n;
+      });
+      flushText();
+    });
+
+    var files = [], ov = [
+      ["/ppt/presentation.xml", CT + "presentationml.presentation.main+xml"],
+      ["/ppt/slideMasters/slideMaster1.xml", CT + "presentationml.slideMaster+xml"],
+      ["/ppt/slideLayouts/slideLayout1.xml", CT + "presentationml.slideLayout+xml"],
+      ["/ppt/theme/theme1.xml", CT + "theme+xml"],
+      ["/ppt/presProps.xml", CT + "presentationml.presProps+xml"],
+      ["/ppt/viewProps.xml", CT + "presentationml.viewProps+xml"],
+      ["/ppt/tableStyles.xml", CT + "presentationml.tableStyles+xml"],
+      CORE_CT
+    ];
+    var spTreeHead = '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>';
+    slides.forEach(function (inner, i) {
+      files.push(["ppt/slides/slide" + (i + 1) + ".xml", XML + "<p:sld " + P_NS + "><p:cSld><p:spTree>" + spTreeHead + inner + '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>']);
+      files.push(["ppt/slides/_rels/slide" + (i + 1) + ".xml.rels", rels([["rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"]])]);
+      ov.push(["/ppt/slides/slide" + (i + 1) + ".xml", CT + "presentationml.slide+xml"]);
+    });
+    files.unshift(["[Content_Types].xml", types(ov)]);
+    files.push(["_rels/.rels", rels([["rId1", "officeDocument", "ppt/presentation.xml"], CORE_REL])]);
+    files.push(["docProps/core.xml", coreProps(m.title)]);
+    files.push(["ppt/presentation.xml", XML + "<p:presentation " + P_NS + ' saveSubsetFonts="1"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>' +
+      slides.map(function (s, i) { return '<p:sldId id="' + (256 + i) + '" r:id="rId' + (10 + i) + '"/>'; }).join("") +
+      '</p:sldIdLst><p:sldSz cx="' + SW + '" cy="' + SH + '"/><p:notesSz cx="6858000" cy="9144000"/></p:presentation>']);
+    files.push(["ppt/_rels/presentation.xml.rels", rels([["rId1", "slideMaster", "slideMasters/slideMaster1.xml"], ["rId2", "theme", "theme/theme1.xml"],
+      ["rId3", "presProps", "presProps.xml"], ["rId4", "viewProps", "viewProps.xml"], ["rId5", "tableStyles", "tableStyles.xml"]]
+      .concat(slides.map(function (s, i) { return ["rId" + (10 + i), "slide", "slides/slide" + (i + 1) + ".xml"]; })))]);
+    files.push(["ppt/slideMasters/slideMaster1.xml", XML + "<p:sldMaster " + P_NS + '><p:cSld><p:bg><p:bgRef idx="1001"><a:schemeClr val="bg1"/></p:bgRef></p:bg><p:spTree>' + spTreeHead + "</p:spTree></p:cSld>" +
+      '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>' +
+      '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>' +
+      '<p:txStyles><p:titleStyle><a:lvl1pPr><a:defRPr sz="3200"/></a:lvl1pPr></p:titleStyle><p:bodyStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr></p:bodyStyle><p:otherStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr></p:otherStyle></p:txStyles></p:sldMaster>']);
+    files.push(["ppt/slideMasters/_rels/slideMaster1.xml.rels", rels([["rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"], ["rId2", "theme", "../theme/theme1.xml"]])]);
+    files.push(["ppt/slideLayouts/slideLayout1.xml", XML + "<p:sldLayout " + P_NS + ' type="blank" preserve="1"><p:cSld name="Blank"><p:spTree>' + spTreeHead + '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>']);
+    files.push(["ppt/slideLayouts/_rels/slideLayout1.xml.rels", rels([["rId1", "slideMaster", "../slideMasters/slideMaster1.xml"]])]);
+    files.push(["ppt/presProps.xml", XML + "<p:presentationPr " + P_NS + "/>"]);
+    files.push(["ppt/viewProps.xml", XML + "<p:viewPr " + P_NS + '><p:normalViewPr><p:restoredLeft sz="15620"/><p:restoredTop sz="94660"/></p:normalViewPr><p:gridSpacing cx="76200" cy="76200"/></p:viewPr>']);
+    files.push(["ppt/tableStyles.xml", XML + '<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"/>']);
+    var solid = function (v) { return '<a:solidFill><a:schemeClr val="' + v + '"/></a:solidFill>'; };
+    files.push(["ppt/theme/theme1.xml", XML + '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="talk-on-canvas"><a:themeElements>' +
+      '<a:clrScheme name="talk-on-canvas"><a:dk1><a:srgbClr val="1D2026"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="2B313B"/></a:dk2><a:lt2><a:srgbClr val="F2F2EE"/></a:lt2>' +
+      '<a:accent1><a:srgbClr val="1F6FEB"/></a:accent1><a:accent2><a:srgbClr val="137A4A"/></a:accent2><a:accent3><a:srgbClr val="A06B00"/></a:accent3><a:accent4><a:srgbClr val="6B45C9"/></a:accent4><a:accent5><a:srgbClr val="B23A20"/></a:accent5><a:accent6><a:srgbClr val="5B6370"/></a:accent6>' +
+      '<a:hlink><a:srgbClr val="1F6FEB"/></a:hlink><a:folHlink><a:srgbClr val="6B45C9"/></a:folHlink></a:clrScheme>' +
+      '<a:fontScheme name="talk-on-canvas"><a:majorFont><a:latin typeface="Arial"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Arial"/></a:majorFont><a:minorFont><a:latin typeface="Arial"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Arial"/></a:minorFont></a:fontScheme>' +
+      '<a:fmtScheme name="talk-on-canvas"><a:fillStyleLst>' + solid("phClr") + solid("phClr") + solid("phClr") + "</a:fillStyleLst>" +
+      '<a:lnStyleLst><a:ln w="6350">' + solid("phClr") + '</a:ln><a:ln w="12700">' + solid("phClr") + '</a:ln><a:ln w="19050">' + solid("phClr") + "</a:ln></a:lnStyleLst>" +
+      "<a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst>" +
+      "<a:bgFillStyleLst>" + solid("phClr") + solid("phClr") + solid("phClr") + "</a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>"]);
+    return files;
+  }
 
   /* ---------- 갱신: http 모드 (제자리 교체) ---------- */
 
@@ -1084,9 +1953,11 @@
     var sc = scroller();
     var curTop = sc ? sc.scrollTop : 0;
     var curWin = window.scrollY;
-    document.getElementById("status").innerHTML = doc.getElementById("status").innerHTML;
     document.getElementById("todo").innerHTML = doc.getElementById("todo").innerHTML;
     document.getElementById("content").innerHTML = doc.getElementById("content").innerHTML;
+    var outsNew = doc.getElementById("outputs");
+    if (outsNew) document.getElementById("outputs").innerHTML = outsNew.innerHTML;
+    hideOutMenu();
     document.getElementById("doc-title").textContent = doc.getElementById("doc-title").textContent;
     document.title = doc.title;
     root.dataset.rev = doc.documentElement.dataset.rev;
