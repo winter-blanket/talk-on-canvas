@@ -217,6 +217,7 @@
     content: "방금 갱신"; font-family: var(--mono); font-size: 9.5px; font-weight: 500;
     color: var(--accent-ink); background: var(--accent); padding: 2px 6px; border-radius: 4px; letter-spacing: 0;
   }
+  :lang(en) section.card.fresh > h2::after { content: "Just updated"; }
   section.card > h3 { margin: 22px 0 8px; font-size: 15px; font-weight: 670; letter-spacing: -.005em; }
   section.card > *:last-child { margin-bottom: 0; }
   section.card p { margin: 0 0 12px; }
@@ -379,6 +380,7 @@
   ul.hl-list li.stale { color: var(--ink-faint); cursor: default; }
   ul.hl-list li.stale:hover { background: none; }
   ul.hl-list li.stale::after { content: " · 본문에서 바뀜"; font-size: 12px; }
+  :lang(en) ul.hl-list li.stale::after { content: " · changed in content"; }
   x-hl.pulse { outline: 2px solid #ffb800; outline-offset: 1px; }
 
   /* 산출물 — 카드 우측 상단의 내보내기 버튼과 형식 메뉴 */
@@ -440,23 +442,23 @@
   <header class="topbar">
     <div class="topbar-row">
       <div class="topbar-id">
-        <p class="eyebrow"><span class="dot"></span><span>Claude Code skill</span><span class="brand-sep">/</span><span class="brand-name">talk-on-canvas</span><a class="brand-gh" href="https://github.com/winter-blanket/talk-on-canvas" target="_blank" rel="noopener" title="GitHub 저장소 열기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><span class="mode-tag" id="mode-label"></span></p>
+        <p class="eyebrow"><span class="dot"></span><span>Claude Code skill</span><span class="brand-sep">/</span><span class="brand-name">talk-on-canvas</span><a class="brand-gh" href="https://github.com/winter-blanket/talk-on-canvas" target="_blank" rel="noopener" title="GitHub 저장소 열기" data-i18n-title="repo"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><span class="mode-tag" id="mode-label"></span></p>
         <h1 id="doc-title">{{TITLE}}</h1>
       </div>
       <div class="topbar-side">
-        <p class="rail-meta">rev <span id="rev-label">1</span> · <span id="sync-label">{{STARTED}} 시작</span></p>
+        <p class="rail-meta">rev <span id="rev-label">1</span> · <span id="sync-label" data-started="{{STARTED}}">{{STARTED}} 시작</span></p>
         <div class="rail-actions">
-          <button id="btn-hl" type="button">형광펜</button>
+          <button id="btn-hl" type="button" data-i18n="hl">형광펜</button>
           <button id="btn-pause" type="button">일시정지</button>
           <button id="btn-theme" class="icon-btn" type="button"></button>
         </div>
       </div>
     </div>
     <nav class="tabs" id="tabs">
-      <button class="tab" type="button" data-pane="todo">할 일 목록<span class="tab-mark"></span></button>
-      <button class="tab is-active" type="button" data-pane="body">본문<span class="tab-mark"></span></button>
-      <button class="tab" type="button" data-pane="out" hidden>산출물<span class="tab-mark"></span></button>
-      <button class="tab" type="button" data-pane="hl">형광펜 모아보기<span class="tab-mark"></span></button>
+      <button class="tab" type="button" data-pane="todo"><span data-i18n="tabTodo">할 일 목록</span><span class="tab-mark"></span></button>
+      <button class="tab is-active" type="button" data-pane="body"><span data-i18n="tabBody">본문</span><span class="tab-mark"></span></button>
+      <button class="tab" type="button" data-pane="out" hidden><span data-i18n="tabOut">산출물</span><span class="tab-mark"></span></button>
+      <button class="tab" type="button" data-pane="hl"><span data-i18n="tabHl">형광펜 모아보기</span><span class="tab-mark"></span></button>
     </nav>
   </header>
 
@@ -468,12 +470,12 @@
         <div class="wrap">
           <div id="todo">
             <section class="card todo" id="sec-todo" data-rev="0">
-              <h2>할 일 목록 <span class="todo-count"></span></h2>
+              <h2><span data-i18n="tabTodo">할 일 목록</span> <span class="todo-count"></span></h2>
 <!-- TODO -->
 <!-- /TODO -->
             </section>
           </div>
-          <p class="pane-empty" id="todo-empty" hidden>아직 할 일이 없습니다.</p>
+          <p class="pane-empty" id="todo-empty" hidden data-i18n="todoEmpty">아직 할 일이 없습니다.</p>
         </div>
       </div>
     </section>
@@ -510,7 +512,7 @@
           <div id="outputs">
 <!-- OUTPUTS_INSERT -->
           </div>
-          <p class="pane-empty" id="out-empty" hidden>아직 산출물이 없습니다.</p>
+          <p class="pane-empty" id="out-empty" hidden data-i18n="outEmpty">아직 산출물이 없습니다.</p>
         </div>
       </main>
     </section>
@@ -527,7 +529,7 @@
       <main id="hl-main">
         <div class="wrap">
           <div id="hl-content"></div>
-          <p class="pane-empty" id="hl-empty" hidden>화면 오른쪽 위 형광펜 버튼을 누르고 기억해두고 싶은 문장을 드래그해 주세요.</p>
+          <p class="pane-empty" id="hl-empty" hidden data-i18n="hlEmpty">화면 오른쪽 위 형광펜 버튼을 누르고 기억해두고 싶은 문장을 드래그해 주세요.</p>
         </div>
       </main>
     </section>
@@ -535,8 +537,8 @@
   </div>
 </div>
 
-<button id="btn-top" type="button" title="맨 위로" aria-label="맨 위로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></button>
-<button id="toast" type="button">갱신됨</button>
+<button id="btn-top" type="button" title="맨 위로" aria-label="맨 위로" data-i18n-title="top" data-i18n-aria="top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></button>
+<button id="toast" type="button" data-i18n="toast">갱신됨</button>
 
 <script>
 (function () {
@@ -560,6 +562,62 @@
 
   modeLabel.textContent = isHttp ? "" : "· file";
 
+  /* ---------- 화면 언어 ---------- */
+
+  // UI 라벨은 <html lang> 을 따른다. canvas.sh open 이 사용자가 쓴 언어(ko · en)를 박아 둔다.
+  // 정적 라벨은 data-i18n(글자) · data-i18n-title · data-i18n-aria 로 표시하고, 스크립트가 그리는 문구는 T 에서 꺼낸다.
+  var I18N = {
+    ko: {
+      repo: "GitHub 저장소 열기", hl: "형광펜", pause: "일시정지", resume: "자동 갱신 켜기",
+      tabTodo: "할 일 목록", tabBody: "본문", tabOut: "산출물", tabHl: "형광펜 모아보기",
+      todoEmpty: "아직 할 일이 없습니다.", outEmpty: "아직 산출물이 없습니다.",
+      hlEmpty: "화면 오른쪽 위 형광펜 버튼을 누르고 기억해두고 싶은 문장을 드래그해 주세요.",
+      sort: "정렬", sortDesc: "최근 생성순", sortAsc: "과거 생성순", tocCollapse: "목차 접기", tocExpand: "목차 펼치기",
+      top: "맨 위로", toast: "갱신됨", toastMore: "갱신됨 · 새 내용 보기 →",
+      started: function (t) { return t + " 시작"; }, synced: function (t) { return t + " 갱신"; },
+      todoCount: function (d, n) { return d + " / " + n + " 완료"; },
+      noSections: "아직 섹션이 없습니다.", toDark: "다크 모드로 전환", toLight: "라이트 모드로 전환",
+      hlOnTitle: "드래그하면 형광펜이 칠해집니다 — 눌러서 끄기", hlOffTitle: "형광펜 꺼짐 — 눌러서 켜기",
+      hlOnFlash: "형광펜 켬 · 드래그하면 칠해져요", hlOffFlash: "형광펜 끔 · 드래그해도 칠하지 않아요",
+      hlJump: "본문에서 보기", hlNone: "아직 칠한 곳이 없습니다.", hlOneCard: "형광펜은 카드 하나 안에서만 칠할 수 있어요",
+      hlRemove: "형광펜 지우기", exportBtn: "내보내기", file: function (l) { return l + " 파일"; },
+      fmt: { md: "마크다운", docx: "워드", pptx: "프레젠테이션", txt: "텍스트", xlsx: "엑셀", csv: "CSV" },
+      outName: "산출물", exportFail: "내보내지 못했어요 · ", download: function (n) { return n + " 내려받기"; },
+      table: function (n) { return "표 " + n; }, colHead: ["구분", "내용"], sheet: "시트", cont: " (계속)", locale: "ko-KR"
+    },
+    en: {
+      repo: "Open GitHub repository", hl: "Highlighter", pause: "Pause", resume: "Resume updates",
+      tabTodo: "To-do list", tabBody: "Content", tabOut: "Deliverables", tabHl: "Highlights",
+      todoEmpty: "No to-dos yet.", outEmpty: "No deliverables yet.",
+      hlEmpty: "Turn on the Highlighter button at the top right, then drag over any sentence you want to remember.",
+      sort: "Sort", sortDesc: "Newest first", sortAsc: "Oldest first", tocCollapse: "Collapse contents", tocExpand: "Expand contents",
+      top: "Back to top", toast: "Updated", toastMore: "Updated · See what's new →",
+      started: function (t) { return "Started " + t; }, synced: function (t) { return "Updated " + t; },
+      todoCount: function (d, n) { return d + " / " + n + " done"; },
+      noSections: "No sections yet.", toDark: "Switch to dark mode", toLight: "Switch to light mode",
+      hlOnTitle: "Drag to highlight — click to turn off", hlOffTitle: "Highlighter off — click to turn on",
+      hlOnFlash: "Highlighter on · drag to highlight", hlOffFlash: "Highlighter off · dragging won't highlight",
+      hlJump: "Show in content", hlNone: "Nothing highlighted yet.", hlOneCard: "A highlight has to stay inside one card",
+      hlRemove: "Remove highlight", exportBtn: "Export", file: function (l) { return l + " file"; },
+      fmt: { md: "Markdown", docx: "Word", pptx: "PowerPoint", txt: "Text", xlsx: "Excel", csv: "CSV" },
+      outName: "Deliverable", exportFail: "Couldn't export · ", download: function (n) { return "Downloading " + n; },
+      table: function (n) { return "Table " + n; }, colHead: ["Item", "Details"], sheet: "Sheet", cont: " (cont.)", locale: "en-US"
+    }
+  };
+  var T = I18N[(root.lang || "").slice(0, 2).toLowerCase()] || I18N.ko;
+  function applyI18n(scope) {
+    Array.prototype.forEach.call(scope.querySelectorAll("[data-i18n]"), function (el) { if (el.textContent !== T[el.dataset.i18n]) el.textContent = T[el.dataset.i18n]; });
+    Array.prototype.forEach.call(scope.querySelectorAll("[data-i18n-title]"), function (el) { el.title = T[el.dataset.i18nTitle]; });
+    Array.prototype.forEach.call(scope.querySelectorAll("[data-i18n-aria]"), function (el) { el.setAttribute("aria-label", T[el.dataset.i18nAria]); });
+  }
+  applyI18n(document);
+  Array.prototype.forEach.call(document.querySelectorAll(".rail-sort"), function (g) {
+    g.setAttribute("aria-label", T.sort);
+    g.querySelector('[data-sort="desc"]').textContent = T.sortDesc;
+    g.querySelector('[data-sort="asc"]').textContent = T.sortAsc;
+  });
+  syncLabel.textContent = T.started(syncLabel.dataset.started || "");
+
   /* ---------- 목차 접기 ---------- */
 
   // 접힘 상태는 캔버스마다가 아니라 브라우저 전체에 걸쳐 기억한다 — 한 번 접으면 다음 캔버스도 접힌 채로 연다.
@@ -568,7 +626,7 @@
   function readTocPref() { try { return localStorage.getItem(TOC_KEY) === "1"; } catch (e) { return false; } }
   function renderToc(collapsed) {
     document.body.classList.toggle("toc-collapsed", collapsed);
-    var label = collapsed ? "목차 펼치기" : "목차 접기";
+    var label = collapsed ? T.tocExpand : T.tocCollapse;
     Array.prototype.forEach.call(btnTocs, function (b) {
       b.textContent = collapsed ? "»" : "«";
       b.title = label;
@@ -682,6 +740,9 @@
   function decorate() {
     var rev = root.dataset.rev;
 
+    // 할 일 카드는 갱신 때마다 파일 내용(한국어 라벨)으로 통째 교체된다 — 형광펜을 다시 칠하기 전에 라벨부터 맞춘다
+    applyI18n(document.getElementById("todo"));
+
     // 표는 가로 스크롤 컨테이너로 감싼다
     Array.prototype.forEach.call(document.querySelectorAll(".pane table"), function (t) {
       if (!t.parentElement.classList.contains("scroll-x")) {
@@ -705,16 +766,16 @@
     tabs.todo.toggleAttribute("data-empty", items.length === 0);
     if (todoSec) {
       var cnt = todoSec.querySelector(".todo-count");
-      if (cnt) cnt.textContent = items.length ? done + " / " + items.length + " 완료" : "";
+      if (cnt) cnt.textContent = items.length ? T.todoCount(done, items.length) : "";
       todoSec.classList.toggle("fresh", todoSec.dataset.rev === rev);
     }
 
     // 목차 재생성 + 최신 rev 섹션 강조 (본문 · 산출물 탭)
-    var secs = buildToc(toc, document.querySelectorAll("#content section.card"), rev, "아직 섹션이 없습니다.");
+    var secs = buildToc(toc, document.querySelectorAll("#content section.card"), rev, T.noSections);
     tabs.body.toggleAttribute("data-empty", secs.length === 0);
 
     // 산출물 — 첫 산출물이 생기면 탭이 나타나고, 카드마다 내보내기 버튼을 단다
-    var outs = buildToc(outToc, document.querySelectorAll("#outputs section.card"), rev, "아직 산출물이 없습니다.");
+    var outs = buildToc(outToc, document.querySelectorAll("#outputs section.card"), rev, T.outEmpty);
     Array.prototype.forEach.call(outs, function (sec) {
       sec.classList.add("out");
       if (!sec.querySelector(":scope > .out-actions")) sec.insertBefore(exportButton(), sec.firstChild);
@@ -827,17 +888,17 @@
     var p = function (n) { return (n < 10 ? "0" : "") + n; };
     var t = p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
     sessionStorage.setItem(SKEY + ":sync", t);
-    syncLabel.textContent = t + " 갱신";
+    syncLabel.textContent = T.synced(t);
   }
   var lastSync = sessionStorage.getItem(SKEY + ":sync");
-  if (lastSync) syncLabel.textContent = lastSync + " 갱신";
+  if (lastSync) syncLabel.textContent = T.synced(lastSync);
 
   /* ---------- 일시정지 ---------- */
 
   var btnPause = document.getElementById("btn-pause");
   function renderPause() {
     document.body.classList.toggle("is-paused", paused);
-    btnPause.textContent = paused ? "자동 갱신 켜기" : "일시정지";
+    btnPause.textContent = paused ? T.resume : T.pause;
   }
   btnPause.addEventListener("click", function () {
     paused = !paused;
@@ -859,7 +920,7 @@
   function renderTheme() {
     // 버튼에는 '누르면 바뀔' 모드의 아이콘을 보인다
     var light = curTheme() === "light";
-    var label = light ? "다크 모드로 전환" : "라이트 모드로 전환";
+    var label = light ? T.toDark : T.toLight;
     btnTheme.innerHTML = light ? ICON_MOON : ICON_SUN;
     btnTheme.title = label;
     btnTheme.setAttribute("aria-label", label);
@@ -911,14 +972,14 @@
 
   function renderHlBtn() {
     document.body.classList.toggle("hl-off", !hlOn);
-    btnHl.title = hlOn ? "드래그하면 형광펜이 칠해집니다 — 눌러서 끄기" : "형광펜 꺼짐 — 눌러서 켜기";
+    btnHl.title = hlOn ? T.hlOnTitle : T.hlOffTitle;
     btnHl.setAttribute("aria-pressed", hlOn ? "true" : "false");
   }
   btnHl.addEventListener("click", function () {
     hlOn = !hlOn;
     try { localStorage.setItem(HL_ON_KEY, hlOn ? "1" : "0"); } catch (e) {}
     renderHlBtn();
-    flash(hlOn ? "형광펜 켬 · 드래그하면 칠해져요" : "형광펜 끔 · 드래그해도 칠하지 않아요", btnHl);
+    flash(hlOn ? T.hlOnFlash : T.hlOffFlash, btnHl);
   });
   renderHlBtn();
 
@@ -1020,7 +1081,7 @@
         var li = document.createElement("li");
         if (ms.length) {
           li.textContent = Array.prototype.map.call(ms, function (m) { return m.textContent; }).join(" ").replace(/\s+/g, " ").trim();
-          li.title = "본문에서 보기";
+          li.title = T.hlJump;
           li.addEventListener("click", function () { jumpToHl(h.id); });
         } else {
           li.textContent = h.quote.replace(/\s+/g, " ").trim();
@@ -1043,7 +1104,7 @@
     if (!shown) {
       var e = document.createElement("p");
       e.className = "toc-empty";
-      e.textContent = "아직 칠한 곳이 없습니다.";
+      e.textContent = T.hlNone;
       hlToc.appendChild(e);
     }
     document.getElementById("hl-empty").hidden = shown > 0;
@@ -1073,7 +1134,7 @@
     var a = elOf(r.startContainer), b = elOf(r.endContainer);
     var sa = a && a.closest(SCOPES), sb = b && b.closest(SCOPES);
     if (!sa) return;  // 탭·목차·상단 바 같은 화면 뼈대는 칠하지 않는다
-    if (sa !== sb) { flash("형광펜은 카드 하나 안에서만 칠할 수 있어요"); return; }
+    if (sa !== sb) { flash(T.hlOneCard); return; }
     var text = sa.textContent;
     var s = textOffset(sa, r.startContainer, r.startOffset);
     var e = textOffset(sa, r.endContainer, r.endOffset);
@@ -1099,7 +1160,7 @@
   var pop = document.createElement("button");
   pop.id = "hl-pop";
   pop.type = "button";
-  pop.textContent = "형광펜 지우기";
+  pop.textContent = T.hlRemove;
   document.body.appendChild(pop);
   var popId = null;
   function hidePop() { pop.classList.remove("show"); popId = null; }
@@ -1142,19 +1203,14 @@
   // 캔버스는 로컬 파일이라 오프라인에서도 돌아야 하고, 내용이 바깥으로 나가지 않아야 한다.
   // 흐름: 카드 HTML → 문서 모델(제목 + 블록 목록) → 형식별 작성기. 표는 xlsx·csv 의 시트가 된다.
   var FORMATS = [
-    { ext: "md", label: "마크다운" },
-    { ext: "docx", label: "워드" },
-    { ext: "pptx", label: "프레젠테이션" },
-    { ext: "txt", label: "텍스트" },
-    { ext: "xlsx", label: "엑셀" },
-    { ext: "csv", label: "CSV" }
+    { ext: "md" }, { ext: "docx" }, { ext: "pptx" }, { ext: "txt" }, { ext: "xlsx" }, { ext: "csv" }
   ];
   var ICON_EXPORT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
 
   function exportButton() {
     var box = document.createElement("div");
     box.className = "out-actions";
-    box.innerHTML = '<button class="out-export" type="button" aria-haspopup="menu" aria-expanded="false">' + ICON_EXPORT + "내보내기</button>";
+    box.innerHTML = '<button class="out-export" type="button" aria-haspopup="menu" aria-expanded="false">' + ICON_EXPORT + T.exportBtn + "</button>";
     return box;
   }
 
@@ -1167,7 +1223,7 @@
     b.setAttribute("role", "menuitem");
     b.dataset.ext = f.ext;
     b.innerHTML = '<span></span><span class="ext">.' + f.ext + "</span>";
-    b.firstChild.textContent = f.label + " 파일";
+    b.firstChild.textContent = T.file(T.fmt[f.ext]);
     outMenu.appendChild(b);
   });
   document.body.appendChild(outMenu);
@@ -1215,7 +1271,7 @@
 
   function exportCard(sec, ext, anchor) {
     var model = cardModel(sec);
-    var name = (model.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "").replace(/\s+/g, " ").trim().slice(0, 80) || "산출물") + "." + ext;
+    var name = (model.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "").replace(/\s+/g, " ").trim().slice(0, 80) || T.outName) + "." + ext;
     var blob;
     try {
       if (ext === "md") blob = new Blob([toMd(model) + "\n"], { type: "text/markdown;charset=utf-8" });
@@ -1225,7 +1281,7 @@
       else if (ext === "docx") blob = zip(toDocx(model), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       else if (ext === "pptx") blob = zip(toPptx(model), "application/vnd.openxmlformats-officedocument.presentationml.presentation");
     } catch (e) {
-      flash("내보내지 못했어요 · " + e.message, anchor);
+      flash(T.exportFail + e.message, anchor);
       return;
     }
     var a = document.createElement("a");
@@ -1234,7 +1290,7 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    flash(name + " 내려받기", anchor);
+    flash(T.download(name), anchor);
   }
 
   /* 카드 HTML → 문서 모델 */
@@ -1489,7 +1545,7 @@
         else if (b.t === "table") {
           n++;
           sheets.push({
-            name: heading || "표 " + n,
+            name: heading || T.table(n),
             head: b.rows.filter(function (r, i) { return r.head && b.rows.slice(0, i).every(function (x) { return x.head; }); }).length,
             rows: b.rows.map(function (r) { return r.cells.map(plain); })
           });
@@ -1498,7 +1554,7 @@
     }
     walk(m.blocks);
     if (sheets.length) return sheets;
-    var rows = [["구분", "내용"]];
+    var rows = [T.colHead.slice()];
     heading = m.title;
     function flat(blocks) {
       blocks.forEach(function (b) {
@@ -1602,7 +1658,7 @@
   function toXlsx(m) {
     var sheets = sheetsOf(m), used = {};
     sheets.forEach(function (s) {
-      var base = s.name.replace(/[\[\]:*?\/\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 28) || "시트", nm = base, k = 2;
+      var base = s.name.replace(/[\[\]:*?\/\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 28) || T.sheet, nm = base, k = 2;
       while (used[nm.toLowerCase()]) nm = base + " " + k++;
       used[nm.toLowerCase()] = 1;
       s.sheetName = nm;
@@ -1771,7 +1827,7 @@
   function toPptx(m) {
     var slides = [], sid = 0;
     function rp(r, sz, color, b) {
-      return '<a:rPr lang="ko-KR" sz="' + sz + '"' + (b || r.b ? ' b="1"' : "") + (r.i ? ' i="1"' : "") + ' dirty="0"><a:solidFill><a:srgbClr val="' + (r.href ? C.accent : color) + '"/></a:solidFill>' +
+      return '<a:rPr lang="' + T.locale + '" sz="' + sz + '"' + (b || r.b ? ' b="1"' : "") + (r.i ? ' i="1"' : "") + ' dirty="0"><a:solidFill><a:srgbClr val="' + (r.href ? C.accent : color) + '"/></a:solidFill>' +
         (r.code ? '<a:latin typeface="Consolas"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Consolas"/>' : FONT) + "</a:rPr>";
     }
     function runsX(runs, sz, color, b) {
@@ -1785,7 +1841,7 @@
       var marL = o.bullet ? 342900 * (o.lvl + 1) : 0;
       return '<a:p><a:pPr marL="' + marL + '" indent="' + (o.bullet ? -285750 : 0) + '"' + (o.lvl ? ' lvl="' + Math.min(o.lvl, 8) + '"' : "") + ">" +
         '<a:lnSpc><a:spcPct val="' + (o.code ? 100000 : 115000) + '"/></a:lnSpc><a:spcBef><a:spcPts val="' + (o.gap || 0) + '"/></a:spcBef>' + bu + "</a:pPr>" +
-        runsX(o.runs, o.sz, o.color || C.ink, o.b) + '<a:endParaRPr lang="ko-KR" sz="' + o.sz + '" dirty="0"/></a:p>';
+        runsX(o.runs, o.sz, o.color || C.ink, o.b) + '<a:endParaRPr lang="' + T.locale + '" sz="' + o.sz + '" dirty="0"/></a:p>';
     }
     function textBox(name, x, y, w, h, paras, anchor) {
       sid++;
@@ -1797,7 +1853,7 @@
       sid++;
       return '<p:sp><p:nvSpPr><p:cNvPr id="' + (sid + 1) + '" name="Shape ' + sid + '"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
         '<p:spPr><a:xfrm><a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + w + '" cy="' + h + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="' + color + '"/></a:solidFill><a:ln><a:noFill/></a:ln></p:spPr>' +
-        '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="ko-KR"/></a:p></p:txBody></p:sp>';
+        '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="' + T.locale + '"/></a:p></p:txBody></p:sp>';
     }
     function tableFrame(x, y, w, rows, cols) {
       sid++;
@@ -1821,7 +1877,7 @@
     function chrome(title, cont) {
       return rect(MX, Math.round(0.55 * EMU), Math.round(0.08 * EMU), Math.round(0.5 * EMU), C.accent) +
         textBox("Title", MX + Math.round(0.25 * EMU), Math.round(0.5 * EMU), BW - Math.round(0.25 * EMU), Math.round(0.6 * EMU),
-          [pX({ runs: [{ text: title + (cont ? " (계속)" : "") }], sz: dw(title) > 56 ? 2000 : 2600, b: true })], "ctr");
+          [pX({ runs: [{ text: title + (cont ? T.cont : "") }], sz: dw(title) > 56 ? 2000 : 2600, b: true })], "ctr");
     }
     function footer(n) {
       return textBox("Footer", MX, SH - Math.round(0.5 * EMU), BW, Math.round(0.3 * EMU),
@@ -1836,7 +1892,7 @@
       textBox("Title", Math.round(1 * EMU), Math.round(2.3 * EMU), SW - Math.round(2 * EMU), Math.round(1.4 * EMU),
         [pX({ runs: [{ text: m.title }], sz: 4000, b: true })], "b") +
       textBox("Subtitle", Math.round(1 * EMU), Math.round(3.9 * EMU), SW - Math.round(2 * EMU), Math.round(0.8 * EMU),
-        [pX({ runs: [{ text: m.canvas }], sz: 1600, color: C.dim }), pX({ runs: [{ text: new Date().toLocaleDateString("ko-KR") }], sz: 1400, color: C.faint, gap: 600 })]));
+        [pX({ runs: [{ text: m.canvas }], sz: 1600, color: C.dim }), pX({ runs: [{ text: new Date().toLocaleDateString(T.locale) }], sz: 1400, color: C.faint, gap: 600 })]));
 
     // 본문 — 블록을 장 단위 묶음으로
     var groups = [], cur = { title: m.title, items: [] };
@@ -1967,7 +2023,7 @@
     if (sc2) sc2.scrollTop = curTop;
     window.scrollTo(0, curWin);
     stamp();
-    flash("갱신됨 · 새 내용 보기 →");
+    flash(T.toastMore);
   }
 
   function poll() {
@@ -2006,7 +2062,7 @@
 
     var savedRev = sessionStorage.getItem(SKEY + ":rev");
     var changed = !!savedRev && savedRev !== root.dataset.rev;
-    if (changed) { stamp(); flash("갱신됨 · 새 내용 보기 →"); }
+    if (changed) { stamp(); flash(T.toastMore); }
     sessionStorage.setItem(SKEY + ":rev", root.dataset.rev);
 
     // 바뀌었으면 기본 주기로, 그대로면 두 배씩(최대 RELOAD_MAX_MS) 늘린다

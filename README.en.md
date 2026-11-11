@@ -2,14 +2,8 @@
 
 [한국어](README.md) · [English](README.en.md)
 
-- A Claude Code plugin that keeps a single **HTML canvas** open in your browser and updates it at the speed of the conversation, instead of dumping answers into the terminal.
-
-> Why this exists
-> - Long terminal output stops being read. Tables break, code and prose blur together, and whatever you agreed on ten minutes ago is buried somewhere up the scrollback.
-> - "What did we decide to do?" and "why did you say that wouldn't work?" take a long scroll to recover. So you end up asking the same thing again.
-> - So the conversation gets its own screen next to the terminal, and the LLM rewrites that screen every turn. The terminal becomes the place you type; everything you read lives on the canvas.
-
-Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), which has one fixed purpose (learning concepts) and one fixed layout, this plugin has **no predetermined content structure**. A design discussion gets design tables; debugging gets hypotheses and evidence; planning gets screen flows. Deciding "what block does this conversation need right now" is the plugin's actual job.
+- A plugin that turns what the LLM produces while you work with it into a web page you can actually read.
+- It is not a plugin for building web pages, and it does not just save results as an HTML file. Working with an LLM rarely ends with a single prompt. It takes follow-up questions, extra requests, and rounds of revision. Following all of those intermediate steps across a pile of .md files or a terminal window is hard to read. The goal of this plugin is to compress one conversation into one web page, so you can see it at a glance and keep a record of it.
 
 ### Supported LLMs
 
@@ -17,59 +11,81 @@ Unlike [study-on-canvas](https://github.com/winter-blanket/study-on-canvas), whi
 
 ## Usage
 
-### 1. Invoke the slash command and describe what you're working on.
+### 1. Invoke the plugin with the slash command and describe what you want to work on.
 
-```plain_text
-/talk-on-canvas:talk-on-canvas We're switching our login flow to social login — let's work out what order to do it in.
-```
+![Invoking the skill and describing the task](./images/talk-on-canvas-1.png)
 
-- Natural-language invocation ("let's use a canvas", "summarize this") is not supported. The slash command is the only entry point.
-  - "Summarize this" or "give me an HTML file" is a one-off file request, not a conversation canvas. If the plugin hijacked those, it would start a server and take on an update obligation for the rest of the session that you never asked for.
+- So that you only work on a canvas when you want to, **the plugin runs only from the slash command**. Natural-language invocation ("let's use a canvas", "summarize this") is not supported.
+- The canvas follows the language of your prompt. Write in English and the canvas UI and content are in English. It never asks you which language to use.
 
-### 2. The canvas is created and your browser opens automatically.
+### 2. If there's no folder for canvases yet, it asks where to save them.
 
-- If the directory you ran it from has a `canvas` folder, canvases go there; otherwise it asks where to save (default `<that directory>/canvas/`). [study-on-canvas](https://github.com/winter-blanket/study-on-canvas) uses the same folder.
-- Before creating a new one, it looks in that folder for a **canvas you already started on the same topic**. If one looks like a match (by title and section headings), it asks whether to continue in that file or start a new one.
-- Files are named `<date>-<title>.html`. Inside a git repo, add `canvas/` to `.gitignore` if you don't want to commit them.
-- Want it somewhere else? Say so when you invoke it.
-- Whatever you discussed *before* invoking the plugin is read and backfilled, so you start with a populated canvas rather than a blank one.
+![Choosing where to save the canvas](./images/talk-on-canvas-2.png)
 
-### 3. From there, just talk.
+- By default it creates a folder named `canvas` and saves there, or you can specify a different path.
 
-- The terminal only gets 2–4 lines saying what changed. Conclusions, reasoning, tables, and code all live on the canvas.
-- The browser polls every 1.2 seconds and swaps **only the changed parts** — no flicker, no scroll jumps, no refresh needed.
-- Anything *you* need to do or answer goes into the **to-do list**, as checkboxes. Done and blocked states are kept current as the conversation goes.
+![Asking whether to continue an existing canvas](./images/talk-on-canvas-4.png)
+
+- If a canvas on the same topic already exists, it asks whether to continue in that canvas.
+
+### 3. The canvas is created and your browser opens automatically.
+
+![An example canvas](./images/talk-on-canvas-3.png)
+
+- From then on, **you see every result of the conversation on the canvas.**
+- The terminal only shows a very short note on what changed. Everything else is on the canvas in your browser.
 
 ## Layout
 
-| Area | Role |
-|------|------|
-| To-do list | Only actions *you* must take and questions *you* must answer. The `3 / 7 done` counter is computed automatically. Hides itself when empty |
-| Sections | One per topic. Revisiting a topic rewrites its section rather than stacking a new one |
-| Table of contents (left) | Section list, newest first by default; switch to oldest first with the `과거 생성순` button. Cards follow the same order. A `NEW` badge marks whatever was updated this turn; the `«` button collapses it |
-| Deliverables tab | Say "add this to deliverables" and the result is written up as a standalone document (e.g. a customer persona). The tab appears with the first deliverable; each card has an `Export` button for .md · .docx · .pptx · .txt · .xlsx · .csv |
-| Highlights tab | Collects only what you highlighted. Same table of contents and card titles as the body; each card lists its highlights, and clicking one jumps to it in the body |
-| Theme · back to top | The sun/moon icon switches light/dark (follows the system until you pick). Once you scroll down, a floating `↑` button appears bottom-right |
+### (1) Table of contents
 
-The canvas is **current state**, not a conversation log. It grows in accuracy, not in length.
+![Canvas table of contents](./images/talk-on-canvas-feature-1-1.png)
 
-## Customizing
+- The canvas is split into a table of contents on the left and the results on the right.
+- The table of contents is sorted **newest first** by default, and you can switch it to oldest first.
 
-The installed plugin lives at `~/.claude/plugins/cache/talk-on-canvas/talk-on-canvas/` (or under your `CLAUDE_CONFIG_DIR` if you've changed it).
+![Collapsing the table of contents](./images/talk-on-canvas-feature-1-2.png)
 
-### HTML/UI design
+- You can collapse the table of contents to give the content more room.
+
+### (2) Highlighting
+
+![Turning on highlighter mode](./images/talk-on-canvas-feature-2-1.png)
+
+- Click the highlighter button at the top right to turn on **highlighter mode**.
+
+![Highlighting text](./images/talk-on-canvas-feature-2-2.png)
+
+- While highlighter mode is on, drag over any text to highlight it.
+
+![Highlights tab](./images/talk-on-canvas-feature-2-3.png)
+
+- Everything you highlighted is collected in the **Highlights** tab.
+
+### (3) To-do list
+
+![To-do list](./images/talk-on-canvas-feature-3.png)
+
+- While producing results, the AI decides on its own what counts as a to-do and records it in the **To-do list** tab.
+- Done and blocked states are kept up to date as the conversation goes on.
+
+## Customizing the plugin
+
+- Installed location: `~/.claude/plugins/cache/talk-on-canvas/talk-on-canvas/` (if you've changed `CLAUDE_CONFIG_DIR`, it's under that path instead).
+
+### HTML UI design
 
 - Edit the `<style>` block in `skills/talk-on-canvas/template/canvas.html`.
-- Colors are CSS variables on `:root`; light and dark split on `prefers-color-scheme`.
+- Colors are CSS variables on `:root`, and light/dark follows `prefers-color-scheme`.
 
 ### How much goes to the terminal
 
-- The default is "2–4 pointer lines, everything else on the canvas."
-- Want summaries in the terminal too? Edit the "터미널에 무엇을 쓰는가" (What goes in the terminal) section of `SKILL.md`.
+- The default is **a 2–4 line note on what changed, with all content on the canvas**.
+- If you'd like summaries in the terminal too, edit the "터미널에 무엇을 쓰는가" (What goes in the terminal) section of `SKILL.md`.
 
 ### Turning off the to-do list
 
-- Delete the "할 일 목록 운영" (To-do list) section of `SKILL.md` and leave the template's `<!-- TODO -->` region empty — it hides itself.
+- Delete the "할 일 목록 운영" (Running the to-do list) section of `SKILL.md` and leave the template's `<!-- TODO -->` region empty. The to-do list then hides itself.
 
 ## Installation
 
@@ -80,13 +96,14 @@ The installed plugin lives at `~/.claude/plugins/cache/talk-on-canvas/talk-on-ca
 
 ## How it works
 
-- A local HTTP server bound to `127.0.0.1` serves the canvas folder, and the page compares `data-rev` values to detect updates.
-- Without python3, or if the port can't be bound, it falls back to `file://` mode and refreshes with full reloads. It never reloads while you are scrolling or selecting (it waits for 5 seconds of idle), and backs off from 4 s up to 60 s while the content stays the same. Scroll position is restored per tab.
-- A `<filename>.server` file (pid and port) sits next to the canvas and is removed when the server stops.
+- A local HTTP server (`127.0.0.1`) serves the folder that holds the canvas file, and the browser compares `data-rev` values to detect updates.
+- Without python3, or if no port can be bound, it falls back to `file://` mode and updates with full reloads. It never reloads while you're scrolling or selecting text (it waits until you've been idle for 5 seconds), and if nothing has changed it backs off from every 4 seconds up to every 60 seconds. Scroll position is restored per tab.
+- A `<filename>.server` file (recording the pid and port) appears next to the canvas file and is removed when the server stops.
 
-## Language
+## Supported languages
 
-- Korean. UI labels are hardcoded in Korean — swap the label strings in the template to run it in English.
+- Korean, English
+- There's no language setting. The plugin detects the language of the prompt you invoke it with and builds the canvas UI and content in that language.
 
 ## File structure
 
@@ -97,11 +114,11 @@ talk-on-canvas/
 │   └── marketplace.json
 ├── skills/
 │   └── talk-on-canvas/
-│       ├── SKILL.md                 # The skill — canvas operating rules
+│       ├── SKILL.md                 # The skill itself: canvas operating rules
 │       ├── template/
 │       │   └── canvas.html          # Canvas template (styles and script included)
 │       └── scripts/
-│           └── canvas.sh            # Create / list / resume canvas, run local server, open browser
+│           └── canvas.sh            # Create, list, resume canvases · local server · open browser
 ├── LICENSE
 ├── README.md
 └── README.en.md

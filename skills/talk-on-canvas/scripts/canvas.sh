@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # talk-on-canvas 보조 스크립트.
 #   bash canvas.sh where                      기본 저장 폴더(<현재 경로>/canvas)와 존재 여부
-#   bash canvas.sh open "<제목>" [저장경로]   캔버스 생성 + 로컬 서버 + 브라우저 열기 (저장경로는 파일 또는 폴더)
+#   bash canvas.sh open "<제목>" [저장경로] [ko|en]   캔버스 생성 + 로컬 서버 + 브라우저 열기 (저장경로는 파일 또는 폴더, 언어는 UI 라벨)
 #   bash canvas.sh list [폴더]                기존 캔버스 목록 (최근 수정순, 이어 쓰기 후보 판단용)
 #   bash canvas.sh resume <저장경로>          기존 캔버스를 그대로 두고 서버 + 브라우저만 다시 열기
 #   bash canvas.sh stop <저장경로>            해당 캔버스의 로컬 서버 종료
@@ -40,7 +40,10 @@ PY
 }
 
 cmd_open() {
-  local title="${1:-작업 캔버스}" dest="${2:-}"
+  local lang="${3:-ko}"
+  case "$lang" in ko|en) ;; *) die "언어는 ko 또는 en 입니다: $lang" ;; esac
+  local title="${1:-}" dest="${2:-}"
+  [ -n "$title" ] || { [ "$lang" = en ] && title="Working canvas" || title="작업 캔버스"; }
   local today; today="$(date +%Y-%m-%d)"
   local name="${today}-$(slugify "$title").html"
   [ -n "$dest" ] || dest="$DEFAULT_DIR"
@@ -52,12 +55,12 @@ cmd_open() {
   mkdir -p "$(dirname "$dest")" || die "폴더를 만들 수 없습니다: $(dirname "$dest")"
   cp "$tpl" "$dest" || die "템플릿 복사 실패"
 
-  python3 - "$dest" "$title" "$(date '+%H:%M')" <<'PY'
+  python3 - "$dest" "$title" "$(date '+%H:%M')" "$lang" <<'PY'
 import sys, io
-path, title, started = sys.argv[1], sys.argv[2], sys.argv[3]
+path, title, started, lang = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 html = io.open(path, encoding='utf-8').read()
 esc = title.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-html = html.replace('{{TITLE}}', esc).replace('{{STARTED}}', started).replace('{{LANG}}', 'ko')
+html = html.replace('{{TITLE}}', esc).replace('{{STARTED}}', started).replace('{{LANG}}', lang)
 io.open(path, 'w', encoding='utf-8').write(html)
 PY
 
@@ -168,5 +171,5 @@ case "${1:-}" in
   list) shift; cmd_list "$@" ;;
   resume) shift; cmd_resume "$@" ;;
   stop) shift; cmd_stop "$@" ;;
-  *) die "사용법: canvas.sh where | open \"<제목>\" [경로] | list [폴더] | resume <경로> | stop <경로>" ;;
+  *) die "사용법: canvas.sh where | open \"<제목>\" [경로] [ko|en] | list [폴더] | resume <경로> | stop <경로>" ;;
 esac
