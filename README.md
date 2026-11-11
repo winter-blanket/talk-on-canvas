@@ -1,5 +1,3 @@
-[l]()
-
 # talk-on-canvas
 
 [한국어](README.md) · [English](README.en.md)
