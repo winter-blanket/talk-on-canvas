@@ -13,24 +13,17 @@
 
 ### 1. Invoke the plugin with the slash command and describe what you want to work on.
 
-![Invoking the skill and describing the task](./images/talk-on-canvas-1.png)
-
 - So that you only work on a canvas when you want to, **the plugin runs only from the slash command**. Natural-language invocation ("let's use a canvas", "summarize this") is not supported.
 - The canvas follows the language of your prompt. Write in English and the canvas UI and content are in English. It never asks you which language to use.
 
 ### 2. If there's no folder for canvases yet, it asks where to save them.
 
-![Choosing where to save the canvas](./images/talk-on-canvas-2.png)
-
 - By default it creates a folder named `canvas` and saves there, or you can specify a different path.
-
-![Asking whether to continue an existing canvas](./images/talk-on-canvas-4.png)
-
 - If a canvas on the same topic already exists, it asks whether to continue in that canvas.
 
 ### 3. The canvas is created and your browser opens automatically.
 
-![An example canvas](./images/talk-on-canvas-3.png)
+![An example canvas](./images/talk-on-canvas-3-en.png)
 
 - From then on, **you see every result of the conversation on the canvas.**
 - The terminal only shows a very short note on what changed. Everything else is on the canvas in your browser.
@@ -39,32 +32,32 @@
 
 ### (1) Table of contents
 
-![Canvas table of contents](./images/talk-on-canvas-feature-1-1.png)
+![Canvas table of contents](./images/talk-on-canvas-feature-1-1-en.png)
 
 - The canvas is split into a table of contents on the left and the results on the right.
 - The table of contents is sorted **newest first** by default, and you can switch it to oldest first.
 
-![Collapsing the table of contents](./images/talk-on-canvas-feature-1-2.png)
+![Collapsing the table of contents](./images/talk-on-canvas-feature-1-2-en.png)
 
 - You can collapse the table of contents to give the content more room.
 
 ### (2) Highlighting
 
-![Turning on highlighter mode](./images/talk-on-canvas-feature-2-1.png)
+![Turning on highlighter mode](./images/talk-on-canvas-feature-2-1-en.png)
 
 - Click the highlighter button at the top right to turn on **highlighter mode**.
 
-![Highlighting text](./images/talk-on-canvas-feature-2-2.png)
+![Highlighting text](./images/talk-on-canvas-feature-2-2-en.png)
 
 - While highlighter mode is on, drag over any text to highlight it.
 
-![Highlights tab](./images/talk-on-canvas-feature-2-3.png)
+![Highlights tab](./images/talk-on-canvas-feature-2-3-en.png)
 
 - Everything you highlighted is collected in the **Highlights** tab.
 
 ### (3) To-do list
 
-![To-do list](./images/talk-on-canvas-feature-3.png)
+![To-do list](./images/talk-on-canvas-feature-3-en.png)
 
 - While producing results, the AI decides on its own what counts as a to-do and records it in the **To-do list** tab.
 - Done and blocked states are kept up to date as the conversation goes on.
